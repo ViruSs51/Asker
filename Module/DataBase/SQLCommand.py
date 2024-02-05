@@ -12,27 +12,29 @@ class SQLRequest:
                  host: str='localhost',
                  database: None|str=None
                  ) -> None:
-        self.user = user
-        self.password = password
-        self.host = host
-        self.database = database
+        self.__user = user
+        self.__password = password
+        self.__host = host
+        self.__database = database
     
     def connect(func: FunctionType
                 ) -> Any:
         def wrapper(self,
+                    *args,
                     **kwargs
                     ) -> Any:
             try:
-                with connect(host=self.host,
-                             user=self.user,
-                             password=self.password,
-                             database=self.database
+                with connect(host=self.__host,
+                             user=self.__user,
+                             password=self.__password,
+                             database=self.__database
                              ) as connector:
                     with connector.cursor() as cursor:
                         cursor.execute("SET NAMES 'utf8'")
 
                         result = func(self, 
-                                      cursor=cursor, 
+                                      cursor=cursor,
+                                      *args,
                                       **kwargs
                                       )
 
@@ -110,14 +112,18 @@ class SQLRequest:
              index: str,
              index_value: str,
              cursor: CMySQLCursor|None=None
-             ) -> None:
+             ) -> list:
         ''' SELECT `column` FROM `table-name` '''
-        cursor.execute(f"SELECT {column} FROM {table_name} WHERE `{index}` = {index_value}")
+        cursor.execute(f"SELECT {column} FROM {table_name} WHERE {index} = '{index_value}'")
 
         return cursor.fetchall()
+    
+    @connect
+    def get_tables(self,
+                   column: str,
+                   cursor: CMySQLCursor|None=None
+                   ) -> list:
+        ''' SELECT `column` FROM information_schema.tables FROM table_schema = 'database-name' '''
+        cursor.execute(f"SELECT {column} FROM information_schema.tables WHERE table_schema = '{self.__database}'")
 
-db = SQLRequest(
-    user='mysql',
-    password='mysql',
-    database='asker_db'
-)
+        return cursor.fetchall()

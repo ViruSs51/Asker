@@ -1,11 +1,5 @@
 {
     "bot": {
         "TOKEN": "6503548817:AAH7m91rUXZrY5hhEeZawgh5PO33QwwICuU"
-    },
-    "database": {
-        "db_name": "asker_db",
-        "db_username": "mysql",
-        "db_password": "mysql",
-        "db_host": "localhost"
     }
 }

@@ -1,16 +1,17 @@
-import NewType
-import answer
-import filters as f
-import FileManage as fm
-import SQLCommand as sql
+import Module.Bot.BotControl as BotControl
+#import Module.Bot.filters as f
+
+import Module.MultyType.ConfigType as ConfigType
+
+import Module.FileControl.FileManage as fm
+
+from Module.DataBase import get_db_connection
 
 import asyncio
 from dataclasses import asdict
 
-from aiogram import Bot, Dispatcher, types, F
+from aiogram import Bot, Dispatcher
 from aiogram.filters import Command
-from aiogram.enums import ParseMode
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 class MainBot:
     dp = Dispatcher()
@@ -18,22 +19,17 @@ class MainBot:
     def __init__(self
                  ) -> None:
         self.loadData()
-
-        self.__database = sql.SQLRequest(
-            user=self.__config.config.data['database']['db_username'],
-            password=self.__config.config.data['database']['db_password'],
-            host=self.__config.config.data['database']['db_host'],
-            database=self.__config.config.data['database']['db_name']
-        )
+        self.db = get_db_connection()
+        
         self.bot = Bot(self.bot_data.token)
 
     def loadData(self
                   ) -> None:
-        self.__config = NewType.Config(
+        self.__config = ConfigType.Config(
             config=fm.OpenJson(file_name='data/config.json')
         )
 
-        self.bot_data = NewType.BotData(
+        self.bot_data = ConfigType.BotData(
             token=self.__config.config.data['bot']['TOKEN']
         )
 
@@ -45,7 +41,7 @@ class MainBot:
                   ) -> None:
         await self.dp.start_polling(self.bot)
 
-class AskerBot(MainBot, answer.Action):
+class AskerBot(MainBot, BotControl.Answer):
 
     def __init__(self
                  ) -> None:
