@@ -1,16 +1,14 @@
 import Module.Bot.BotControl as BotControl
-#import Module.Bot.filters as f
+import Module.Bot.filters as f
 
 import Module.MultyType.ConfigType as ConfigType
 
 import Module.FileControl.FileManage as fm
 
-from Module.DataBase import get_db_connection
-
 import asyncio
 from dataclasses import asdict
 
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher#, F
 from aiogram.filters import Command
 
 class MainBot:
@@ -19,7 +17,6 @@ class MainBot:
     def __init__(self
                  ) -> None:
         self.loadData()
-        self.db = get_db_connection()
         
         self.bot = Bot(self.bot_data.token)
 
@@ -41,16 +38,21 @@ class MainBot:
                   ) -> None:
         await self.dp.start_polling(self.bot)
 
-class AskerBot(MainBot, BotControl.Answer):
+class AskerBot(MainBot):
 
     def __init__(self
                  ) -> None:
         super().__init__()
+        self.bot_control = BotControl.Answer(bot=self.bot)
         self.register()
+
+        print('Bot started!')
 
     def register(self
                  ) -> None:
-        self.dp.message(Command('start'))(self.start)
+        self.dp.message(Command('start'))(self.bot_control.start)
+        self.dp.message(f.IsAskerKey())(self.bot_control.start_questions)
+        self.dp.message()(self.bot_control.another_message)
 
 if __name__ == '__main__':
     bot = AskerBot()
