@@ -40,7 +40,7 @@ async def add_user_answer(answer: str,
                           ) -> None:
     db = get_db_connection()
 
-    db.SQL(sql_command=f"UPDATE `answers` SET `answer`='{answer}', `is_answer`='1' WHERE `user_id`='{user_id}' AND `ask_id`='{ask_id}' AND `asker_key`='{asker_key}'")
+    db.SQL(sql_command=f"UPDATE `answers` SET `answer`='{answer}', `is_answer`='1' WHERE `user_id`='{user_id}' AND `ask_id`='{ask_id}' AND `asker_key`='{asker_key}' ORDER BY id DESC LIMIT 1")
 
 async def confirm_user_answer(user_id: int,
                               ask_id: int,
@@ -48,7 +48,7 @@ async def confirm_user_answer(user_id: int,
                               ) -> None:
     db = get_db_connection()
 
-    db.SQL(sql_command=f"UPDATE `answers` SET `confirmed`='1' WHERE `user_id`='{user_id}' AND `ask_id`='{ask_id}' AND `asker_key`='{asker_key}'")
+    db.SQL(sql_command=f"UPDATE `answers` SET `confirmed`='1' WHERE `user_id`='{user_id}' AND `ask_id`='{ask_id}' AND `asker_key`='{asker_key}' ORDER BY id DESC LIMIT 1")
 
 async def reset_user_answer(user_id: int,
                             ask_id: int,
@@ -56,7 +56,7 @@ async def reset_user_answer(user_id: int,
                             ) -> None:
     db = get_db_connection()
 
-    db.SQL(sql_command=f"UPDATE `answers` SET `answer`='', `is_answer`='0', `confirmed`='0' WHERE `user_id`='{user_id}' AND `ask_id`='{ask_id}' AND `asker_key`='{asker_key}'")
+    db.SQL(sql_command=f"UPDATE `answers` SET `answer`='', `is_answer`='0', `confirmed`='0' WHERE `user_id`='{user_id}' AND `ask_id`='{ask_id}' AND `asker_key`='{asker_key}' ORDER BY `id` DESC LIMIT 1")
 
 async def get_answer_from_list(list: list[tuple]
                                ) -> tuple|None:

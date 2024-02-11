@@ -55,8 +55,9 @@ class Message(Register):
             config=fm.OpenJson(file_name='Module/Bot/data/MessageConfig.json')
         )
 
+    #Not use
     @Register.load
-    async def register_message(self,
+    async def __register_message(self,
                                message: Message
                                ) -> None:
         chat_id = str(message.chat.id)
@@ -66,9 +67,10 @@ class Message(Register):
 
         else:
             self.config.config.data[chat_id].append(message.message_id)
-
+    
+    #Not use
     @Register.load
-    async def delete_message(self,
+    async def __delete_message(self,
                              bot: Bot,
                              message: Message,
                              n: int=2,

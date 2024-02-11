@@ -12,7 +12,7 @@ async def get_menu(menu: str,
             keyboard=[
                 [
                     KeyboardButton(text=lang.button_start_menu_login),
-                    KeyboardButton(text=lang.button_start_menu_singup)
+                    KeyboardButton(text=lang.button_start_menu_signup)
                 ]
             ],
             resize_keyboard=True,
