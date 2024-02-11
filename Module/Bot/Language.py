@@ -7,7 +7,11 @@ __languages = {
         help='Чтобы пройти опрос, перешлите пригласительное сообщение, которое вам прислали вместе с ссылкой на данного бота.',
         button_start_menu_login='Войти в аккаунт',
         button_start_menu_singup='Зарегистрироваться',
-        description_start_menu='Зарегистрируйся или войти в аккаунт!'
+        description_start_menu='Зарегистрируйся или войти в аккаунт!',
+        asker_used='Вы уже прошли данный опрос!',
+        confirm_ask="Подтвердите ответ:",
+        confirm_ask_button_continue='Продолжеть',
+        confirm_ask_button_edit='Редактировать ответ'
     ),
     'en': LangType.Language(
         welcome='Welcome, {username}!',
@@ -15,10 +19,14 @@ __languages = {
         help='To take the survey, forward the invitation message you received along with the link to this bot.',
         button_start_menu_login='Log in',
         button_start_menu_singup='Sign up',
-        description_start_menu='Sign up or log in to your account!'
+        description_start_menu='Sign up or log in to your account!',
+        asker_used='',
+        confirm_ask='',
+        confirm_ask_button_continue='',
+        confirm_ask_button_edit=''
     )
 }
 
-async def get_lang(lang: str='en'
+async def get_lang(lang: str='ru'
              ) -> LangType.Language:
     return __languages[lang]

@@ -50,8 +50,18 @@ class AskerBot(MainBot):
 
     def register(self
                  ) -> None:
-        self.dp.message(Command('start'))(self.bot_control.start)
+        #Confirmed answer
+        self.dp.callback_query((f.UserConfirmed()))(self.bot_control.confirmed_answer)
+        self.dp.callback_query((f.UserNoConfirmed()))(self.bot_control.no_confirmed_answer)
+
+        #Question
+        self.dp.message(f.UserAnswer())(self.bot_control.get_answer)
+        
+        #Start questions
         self.dp.message(f.IsAskerKey())(self.bot_control.start_questions)
+
+        #Another command
+        self.dp.message(Command('start'))(self.bot_control.start)
         self.dp.message()(self.bot_control.another_message)
 
 if __name__ == '__main__':

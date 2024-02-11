@@ -71,8 +71,13 @@ class Message(Register):
     async def delete_message(self,
                              bot: Bot,
                              message: Message,
-                             n: int=2
+                             n: int=2,
+                             all: bool=False
                              ) -> None:
+        '''
+            n - cate message se vor fi sterge
+        '''
+
         chat_id = str(message.chat.id)
         
         if chat_id in self.config.config.data:
@@ -80,5 +85,7 @@ class Message(Register):
             if message_length:
                 n = message_length if n > message_length else n
                 await bot.delete_messages(chat_id=message.chat.id, 
-                                    message_ids=self.config.config.data[chat_id][-n:])
+                                          message_ids=self.config.config.data[chat_id][-n:] if not all else self.config.config.data[chat_id])
                 self.config.config.data[chat_id] = self.config.config.data[chat_id][:-n]
+                
+                if all: self.config.config.data[chat_id] = []

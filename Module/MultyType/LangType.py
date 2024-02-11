@@ -8,3 +8,7 @@ class Language:
     button_start_menu_login: str
     button_start_menu_singup: str
     description_start_menu: str
+    asker_used: str
+    confirm_ask: str
+    confirm_ask_button_continue: str
+    confirm_ask_button_edit: str

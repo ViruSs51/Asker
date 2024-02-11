@@ -1,6 +1,6 @@
 from ..Bot import Action as Action
 
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, user
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, user
 
 async def get_menu(menu: str, 
                    user: user.User
@@ -8,7 +8,7 @@ async def get_menu(menu: str,
     lang = await Action.get_language(user=user)
 
     if menu == 'start':
-        menu = ReplyKeyboardMarkup(
+        keyboard = ReplyKeyboardMarkup(
             keyboard=[
                 [
                     KeyboardButton(text=lang.button_start_menu_login),
@@ -20,6 +20,23 @@ async def get_menu(menu: str,
         )
 
     else:
-        menu = None
+        keyboard = None
 
-    return menu
+    return keyboard
+
+async def get_confirmed_ask(user: user.User
+                            ) -> InlineKeyboardMarkup:
+    lang = await Action.get_language(user=user)
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text=lang.confirm_ask_button_continue,
+                                     callback_data='answer-confirmed'),
+                InlineKeyboardButton(text=lang.confirm_ask_button_edit,
+                                     callback_data='answer-no-confirmed')
+            ]
+        ]
+    )
+    
+    return keyboard

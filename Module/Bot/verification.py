@@ -72,3 +72,17 @@ class Message:
                         return key.split(':')[0]
 
         return False
+    
+class Asker:
+
+    def __init__(self,
+                 user_id: int,
+                 asker_key: str
+                 ) -> None:
+        self.user_id = user_id
+        self.asker_key = asker_key
+        self.__db = get_db_connection()
+    
+    async def used_key(self
+                       ) -> bool:
+        return self.__db.SQL(sql_command=f"SELECT * FROM `answers` WHERE `user_id`='{self.user_id}' AND `asker_key`='{self.asker_key}'") != None
