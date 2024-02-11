@@ -16,7 +16,6 @@ class Answer:
     def __init__(self,
                  bot: Bot
                  ) -> None:
-        #self.message_register = reg.Message()
         self.bot = bot
         self.db = get_db_connection()
 
@@ -25,63 +24,42 @@ class Answer:
                     ) -> None:
         user_data = message.from_user
         lang = await Action.get_language(user=user_data)
-
-        #await self.message_register.delete_message(bot=self.bot,
-        #                                           message=message,
-        #                                           n=2,
-        #                                           all=True)
         
         user = check.User(user=user_data)
         username = await user.get_name()
-
-        #Register message(id and time)
-        #await self.message_register.register_message(message=message)
-
-        #Welcome and description message
         await message.answer(
                             text=f'{lang.welcome.format(username=username)}\n{lang.about}\n\n{lang.help}',
                             reply_markup=await menu.get_menu(menu='start', user=user_data)
         )
-        #await self.message_register.register_message(message=send_message)
 
     async def start_questions(self,
                               message: Message
                               ) -> None:
         asker_key = message.text.split('"')[1]
         user_data = message.from_user
-        #lang = await Action.get_language(user=user_data)
-    
-        #await self.message_register.register_message(message=message)
-
-        #Delete message
-        #await self.message_register.delete_message(bot=self.bot,
-        #                                           message=message,
-        #                                           n=3,
-        #                                           all=True)
     
         #Get ask from databse
         ask_data = await Action.get_ask(asker_key=asker_key,
                                         ask_queue=1)
+
         if not ask_data:
             return
         
-        await message.answer(text=ask_data[0][1],
-                                reply_markup=ReplyKeyboardRemove())
+        keyboard = await menu.get_ask_keyboard(ask_data=ask_data)
         
-        #await self.message_register.register_message(message=send_message)
+        await message.answer(text=ask_data[0][1],
+                                reply_markup=keyboard)
 
         await Action.add_user_answer_template(user_id=user_data.id, 
                                                 ask_data=ask_data, 
                                                 asker_key=asker_key)
 
     async def get_answer(self,
-                         message: Message
+                         message: Message|CallbackQuery
                          ) -> None:
         user_answer: tuple
         user_data = message.from_user
         lang = await Action.get_language(user=user_data)
-
-        #await self.message_register.register_message(message=message)
 
         user_answers = await Action.get_user_answers(user_id=message.from_user.id)
 
@@ -91,21 +69,20 @@ class Answer:
                     user_answer = answer
 
                     break
-            
             else:
-                #await self.bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
                 return
 
-            await Action.add_user_answer(answer=message.text,
-                                   user_id=message.from_user.id,
+            await Action.add_user_answer(answer=message.text if type(message) == Message else message.data.split(':')[1],
+                                   user_id=user_data.id,
                                    ask_id=user_answer[0],
                                    asker_key=user_answer[1])
             
-            await message.answer(text=lang.confirm_ask,
-                                                reply_markup=await menu.get_confirmed_ask(user=user_data))
-            #await self.message_register.register_message(message=send_message)
-            
+            await self.bot.send_message(chat_id=user_data.id,
+                                        text=lang.confirm_ask,
+                                        reply_markup=await menu.get_confirmed_ask(user=user_data))    
 
+            if type(message) == CallbackQuery:
+                await message.answer() 
     
     async def confirmed_answer(self,
                                callback: CallbackQuery
@@ -115,11 +92,6 @@ class Answer:
         user_data = callback.from_user
         lang = await Action.get_language(user=user_data)
 
-        #Delete message
-        #await self.message_register.delete_message(bot=self.bot,
-        #                                           message=callback.message,
-        #                                           n=3,
-        #                                           all=True)
         await self.bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         
         user_answers = await Action.get_user_answers(user_id=user_data.id)
@@ -137,18 +109,19 @@ class Answer:
             #Get ask from databse
             ask_data = await Action.get_ask(asker_key=user_answer[1],
                                             ask_queue=user_answer[0]+1)
+
             if not ask_data:
                 await self.bot.send_message(chat_id=message.chat.id,
                                                        text=lang.finished_question,
                                                        reply_markup=await menu.get_menu(menu='start', user=user_data))
             
             else:
+                keyboard = await menu.get_ask_keyboard(ask_data=ask_data)
+
                 await self.bot.send_message(chat_id=message.chat.id,
                                                            text=ask_data[0][1],
-                                                           reply_markup=ReplyKeyboardRemove())
-                #await self.message_register.register_message(message=send_message)
-
-                #Add user answer Null to database
+                                                           reply_markup=keyboard)
+               
                 await Action.add_user_answer_template(user_id=user_data.id, 
                                                       ask_data=ask_data, 
                                                       asker_key=user_answer[1])
@@ -163,11 +136,6 @@ class Answer:
         user_data = callback.from_user
         lang = await Action.get_language(user=user_data)
 
-        #Delete message
-        #await self.message_register.delete_message(bot=self.bot,
-        #                                           message=message,
-        #                                           n=3,
-        #                                           all=True)
         await self.bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         
         user_answers = await Action.get_user_answers(user_id=user_data.id)
@@ -181,21 +149,22 @@ class Answer:
             await Action.reset_user_answer(user_id=user_data.id,
                                            ask_id=user_answer[0],
                                            asker_key=user_answer[1])
+            
+            #Get ask from databse
+            ask_data = await Action.get_ask(asker_key=user_answer[1],
+                                            ask_queue=user_answer[0])
+            
+            keyboard = None
+            if ask_data:
+                keyboard = await menu.get_ask_keyboard(ask_data=ask_data)
 
             await self.bot.send_message(chat_id=message.chat.id,
-                                                       text=lang.message_for_edit,
-                                                       reply_markup=ReplyKeyboardRemove())
-            #await self.message_register.register_message(message=send_message)
+                                                text=lang.message_for_edit,
+                                                reply_markup=keyboard)
 
             await callback.answer()
     
     async def another_message(self,
                               message: Message
                               ) -> None:
-        #Register message(id)
-        #await self.message_register.register_message(message=message)
-        #    
-        #await self.message_register.delete_message(bot=self.bot,
-        #                                           message=message,
-        #                                           n=1)
         await self.bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)

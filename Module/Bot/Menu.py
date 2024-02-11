@@ -40,3 +40,20 @@ async def get_confirmed_ask(user: user.User
     )
     
     return keyboard
+
+async def get_ask_keyboard(ask_data: list[tuple]
+                           ) -> InlineKeyboardMarkup|None:
+    if ask_data[0][2] == 'note':
+        keyboard = []
+        
+        for answer in ask_data[0][3].split(','):
+            keyboard.append([InlineKeyboardButton(
+                    text=answer,
+                    callback_data=f'UserAnswer:{answer}',
+                    
+            )])
+
+        return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+    else:
+        return None
