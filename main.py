@@ -61,11 +61,20 @@ class AskerBot(MainBot):
         self.dp.message(f.UserAnswer())(self.bot_control.get_answer)
         self.dp.callback_query(f.UserKeyboardAnswer())(self.bot_control.get_answer)
 
+        #Login
+        self.dp.message(f.UserExitLogin())(self.bot_control.exit_login)
+        self.dp.message(f.UserLoginName())(self.bot_control.login_name)
+        self.dp.message(f.UserLoginPassword())(self.bot_control.login_password)
+        self.dp.message(F.text.lower() == 'войти в аккаунт')(self.bot_control.login_start)
+
         #signin
         self.dp.message(f.UserExitSignin())(self.bot_control.exit_signin)
         self.dp.message(f.UserCreateName())(self.bot_control.signin_create_name)
         self.dp.message(f.UserCreatePassword())(self.bot_control.signin_create_password)
         self.dp.message(F.text.lower() == 'зарегистрироваться')(self.bot_control.signin_start)
+
+        #User asks
+        self.dp.message(f.GetAsks())(self.bot_control.get_asks)
         
         #Start questions
         self.dp.message(f.IsAskerKey())(self.bot_control.start_questions)

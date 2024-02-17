@@ -1,6 +1,7 @@
 from ..Bot import verification as check
 from ..Bot import Action as Action
 from ..Bot import Menu as menu
+from ..FileControl import FileManage as fm
 from ..DataBase import get_db_connection
 
 import asyncio
@@ -163,3 +164,64 @@ class UserExitSignin(Filter):
                         return True
 
         return False
+    
+class UserExitLogin(Filter):
+
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        if message.text.lower() == 'выйти':
+            file = fm.OpenJson(file_name='Module/Bot/data/login_procces.json')
+
+            if str(message.from_user.id) in file.data:
+                del file.data[str(message.from_user.id)]
+                file.update()
+
+                return True
+
+        return False
+    
+class UserLoginName(Filter):
+
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        file = fm.OpenJson(file_name='Module/Bot/data/login_procces.json')
+        
+        if str(message.from_user.id) in file.data and not file.data[str(message.from_user.id)]['username']:
+            return True
+
+        return False
+    
+class UserLoginPassword(Filter):
+
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        file = fm.OpenJson(file_name='Module/Bot/data/login_procces.json')
+        
+        if str(message.from_user.id) in file.data and not file.data[str(message.from_user.id)]['password']:
+            return True
+
+        return False
+    
+class GetAsks(Filter):
+
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        db = get_db_connection()
+        connected_id = db.SQL(f"SELECT `connected_id` FROM `users`")
+
+        if connected_id:
+            connected = False
+            for connect in connected_id:
+                if str(message.from_user.id) in connect[0].split(','):
+                    connected = True
+                    break
+            
+            if connected and message.text.lower() == 'мой опросы':
+                return True
+        
+        return False
+        

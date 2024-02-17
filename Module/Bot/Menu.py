@@ -1,23 +1,48 @@
 from ..Bot import Action as Action
+from ..DataBase import get_db_connection
 
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, user
 
 async def get_menu(menu: str, 
                    user: user.User
                    ) -> ReplyKeyboardMarkup|None:
+    db = get_db_connection()
     lang = await Action.get_language(user=user)
+    connected_id = db.SQL(f"SELECT `connected_id` FROM `users`")
 
     if menu == 'start':
-        keyboard = ReplyKeyboardMarkup(
-            keyboard=[
-                [
-                    KeyboardButton(text=lang.button_start_menu_login),
-                    KeyboardButton(text=lang.button_start_menu_signup)
-                ]
-            ],
-            resize_keyboard=True,
-            input_field_placeholder=lang.description_start_menu
-        )
+        connected = False
+        for connect in connected_id:
+            if str(user.id) in connect[0].split(','):
+                connected = True
+                break
+
+        if connected:
+            keyboard = ReplyKeyboardMarkup(
+                keyboard=[
+                    [
+                        KeyboardButton(text='Мой опросы')
+                    ],
+                    #[
+                    #    KeyboardButton(text='Настройки')
+                    #],
+                    #[
+                    #    KeyboardButton(text='Выйти')
+                    #]
+                ],
+                resize_keyboard=True,
+            )
+        else:
+            keyboard = ReplyKeyboardMarkup(
+                keyboard=[
+                    [
+                        KeyboardButton(text=lang.button_start_menu_login),
+                        KeyboardButton(text=lang.button_start_menu_signup)
+                    ]
+                ],
+                resize_keyboard=True,
+                input_field_placeholder=lang.description_start_menu
+            )
 
     else:
         keyboard = None
@@ -66,6 +91,28 @@ async def get_exit_button(
             [
                 KeyboardButton(text='Выйти')
             ]
+        ],
+        resize_keyboard=True
+    )
+
+    return keyboard
+
+async def get_menu_myasks(user_data: user.User) -> ReplyKeyboardMarkup|None:
+    db = get_db_connection()
+    connected_id = db.SQL(f"SELECT `connected_id`, `username` FROM `users`")
+
+    connected_username = None
+    for connect in connected_id:
+        if str(user_data.id) in connect[0].split(','):
+            connected_username = connect[1]
+
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text='Новый опрос')
+            ]
+        ] + [
+            [KeyboardButton(text=button.split(':')[0])] for button in db.SQL(f"SELECT `asker_key` FROM `users` WHERE `username` = '{connected_username}'")[0][0].split(',')
         ],
         resize_keyboard=True
     )

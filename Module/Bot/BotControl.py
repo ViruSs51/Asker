@@ -2,6 +2,7 @@ from ..Bot import verification as check
 from ..Bot import ActionRegister as reg
 from ..Bot import Menu as menu
 from ..Bot import Action as Action
+from ..FileControl import FileManage as fm
 from ..DataBase import get_db_connection
 
 import asyncio
@@ -24,13 +25,105 @@ class Answer:
                     ) -> None:
         user_data = message.from_user
         lang = await Action.get_language(user=user_data)
+        connected_id = self.db.SQL(f"SELECT `connected_id` FROM `users`")
         
         user = check.User(user=user_data)
         username = await user.get_name()
-        await message.answer(
-                            text=f'{lang.welcome.format(username=username)}\n{lang.about}\n\n{lang.help}',
-                            reply_markup=await menu.get_menu(menu='start', user=user_data)
-        )
+
+        connected = False
+        for connect in connected_id:
+            if str(user_data.id) in connect[0].split(','):
+                connected = True
+                break
+        
+        if connected:
+            await message.answer(
+                                text='Приветствую вас снова!\nВыберите, что вы хотите сделать в меню снизу, или пришлите сюда пригласительное сообщение к данному боту, если хотите пройти какой-либо опрос.',
+                                reply_markup=await menu.get_menu(menu='start', user=user_data)
+            )
+        else:
+            await message.answer(
+                                text=f'{lang.welcome.format(username=username)}\n{lang.about}\n\n{lang.help}',
+                                reply_markup=await menu.get_menu(menu='start', user=user_data)
+            )
+    
+    async def get_asks(self,
+                       message: Message):
+        await message.answer(text="Выберите действие или опрос.",
+                             reply_markup=await menu.get_menu_myasks(message.from_user))
+
+    async def login_start(self,
+                          message: Message
+                          ):
+        id_connected = self.db.SQL(f"SELECT `id`, `connected_id` FROM `users`")
+
+        if id_connected:
+            for id in id_connected:
+                all_id = id[1].split(',')
+
+                if str(message.from_user.id) in all_id:
+                    all_id.remove(str(message.from_user.id))
+                    self.db.SQL(f"UPDATE `users` SET `connected_id` = '{','.join(all_id)}' WHERE `id` = '{id[0]}'")
+
+        file = fm.OpenJson(file_name='Module/Bot/data/login_procces.json')
+        file.data[str(message.from_user.id)] = {
+            'username': '',
+            'password': ''
+        }
+        file.update()
+        
+        await message.answer(text="Введите имя пользователя:",
+                             reply_markup=await menu.get_exit_button())
+        
+    async def exit_login(self,
+                          message: Message
+                          ) -> None:
+        await message.answer(text="Вы вышли из меню входа в аккаунт!",
+                             reply_markup=await menu.get_menu(menu='start', user=message.from_user))
+        
+    async def login_name(self,
+                          message: Message
+                          ):
+        usernames = self.db.SQL(f"SELECT `username` FROM `users`")
+
+        if usernames:
+            for username in usernames:
+                if username[0] != message.text:
+                    await message.answer(text="Этого имени не существует!\nВведите, пожалуйста, существующее имя:",
+                                        reply_markup=await menu.get_exit_button())
+                    
+                    return
+
+        file = fm.OpenJson(file_name='Module/Bot/data/login_procces.json')
+        file.data[str(message.from_user.id)]['username'] = message.text
+        file.update()
+        
+        await message.answer(text="Введите пароль от аккаунта:",
+                             reply_markup=await menu.get_exit_button())
+    
+    async def login_password(self,
+                          message: Message
+                          ):
+        file = fm.OpenJson(file_name='Module/Bot/data/login_procces.json')
+        password = self.db.SQL(f"SELECT `password`, `connected_id` FROM `users` WHERE `username` = '{file.data[str(message.from_user.id)]['username']}'")
+
+        if password[0][0] == message.text:
+            connected_id = password[0][1].split(',')
+            connected_id.append(str(message.from_user.id))
+            connected_id = ','.join(connected_id)
+
+            self.db.SQL(f"UPDATE `users` SET `connected_id` = '{connected_id}' WHERE `username` = '{file.data[str(message.from_user.id)]['username']}'")
+            
+            await message.answer(text="Вы успешно вошли в аккаунт!",
+                                    reply_markup=await menu.get_menu(menu='start', user=message.from_user))
+            
+            del file.data[str(message.from_user.id)]
+            file.update()
+
+            return
+        
+        await message.answer(text="Пароль неверен!\nПожалуйста, попробуйте снова:",
+                                    reply_markup=await menu.get_exit_button())
     
     async def signin_start(self,
                      message: Message
