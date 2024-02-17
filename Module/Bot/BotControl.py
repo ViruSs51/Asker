@@ -37,12 +37,13 @@ class Answer:
                      ) -> None:
         id_connected = self.db.SQL(f"SELECT `id`, `connected_id` FROM `users`")
         
-        for id in id_connected:
-            all_id = id[1].split(',')
+        if id_connected:
+            for id in id_connected:
+                all_id = id[1].split(',')
 
-            if str(message.from_user.id) in all_id:
-                all_id.remove(str(message.from_user.id))
-                self.db.SQL(f"UPDATE `users` SET `connected_id` = '{','.join(all_id)}' WHERE `id` = '{id[0]}'")
+                if str(message.from_user.id) in all_id:
+                    all_id.remove(str(message.from_user.id))
+                    self.db.SQL(f"UPDATE `users` SET `connected_id` = '{','.join(all_id)}' WHERE `id` = '{id[0]}'")
         
         self.db.SQL(f"INSERT INTO `users` (`id`, `user_id`, `connected_id`, `username`, `password`, `salt`, `balance`, `premium`, `asker_key`) VALUES (NULL, '{message.from_user.id}', '{message.from_user.id}', '', '', '', '0', '0', '')")
         
