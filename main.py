@@ -8,7 +8,7 @@ import Module.FileControl.FileManage as fm
 import asyncio
 from dataclasses import asdict
 
-from aiogram import Bot, Dispatcher#, F
+from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 
 class MainBot:
@@ -60,6 +60,12 @@ class AskerBot(MainBot):
         #Question
         self.dp.message(f.UserAnswer())(self.bot_control.get_answer)
         self.dp.callback_query(f.UserKeyboardAnswer())(self.bot_control.get_answer)
+
+        #signin
+        self.dp.message(f.UserExitSignin())(self.bot_control.exit_signin)
+        self.dp.message(f.UserCreateName())(self.bot_control.signin_create_name)
+        self.dp.message(f.UserCreatePassword())(self.bot_control.signin_create_password)
+        self.dp.message(F.text.lower() == 'зарегистрироваться')(self.bot_control.signin_start)
         
         #Start questions
         self.dp.message(f.IsAskerKey())(self.bot_control.start_questions)

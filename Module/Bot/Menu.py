@@ -57,3 +57,17 @@ async def get_ask_keyboard(ask_data: list[tuple]
 
     else:
         return None
+    
+async def get_exit_button(
+                   ) -> ReplyKeyboardMarkup|None:
+    
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text='Выйти')
+            ]
+        ],
+        resize_keyboard=True
+    )
+
+    return keyboard

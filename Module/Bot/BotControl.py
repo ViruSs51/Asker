@@ -31,6 +31,55 @@ class Answer:
                             text=f'{lang.welcome.format(username=username)}\n{lang.about}\n\n{lang.help}',
                             reply_markup=await menu.get_menu(menu='start', user=user_data)
         )
+    
+    async def signin_start(self,
+                     message: Message
+                     ) -> None:
+        id_connected = self.db.SQL(f"SELECT `id`, `connected_id` FROM `users`")
+        
+        for id in id_connected:
+            all_id = id[1].split(',')
+
+            if str(message.from_user.id) in all_id:
+                all_id.remove(str(message.from_user.id))
+                self.db.SQL(f"UPDATE `users` SET `connected_id` = '{','.join(all_id)}' WHERE `id` = '{id[0]}'")
+        
+        self.db.SQL(f"INSERT INTO `users` (`id`, `user_id`, `connected_id`, `username`, `password`, `salt`, `balance`, `premium`, `asker_key`) VALUES (NULL, '{message.from_user.id}', '{message.from_user.id}', '', '', '', '0', '0', '')")
+        
+        await message.answer(text="Создайте имя для вашего аккаунта:",
+                             reply_markup=await menu.get_exit_button())
+
+    async def exit_signin(self,
+                          message: Message
+                          ) -> None:
+        self.db.SQL(f"DELETE FROM `users` WHERE (`username` = '' OR `password` = '') AND (`user_id` = {message.from_user.id}) ORDER BY id DESC LIMIT 1;")
+
+        await message.answer(text="Вы вышли из меню регистрации!",
+                             reply_markup=await menu.get_menu(menu='start', user=message.from_user))
+
+
+    async def signin_create_name(self,
+                     message: Message
+                     ) -> None:
+        exit_username = self.db.SQL(f"SELECT `username` FROM `users` WHERE `username` = '{message.text}'")
+
+        if exit_username:
+            await message.answer(text="Данное имя уже занято!\nВыберите другое:",
+                             reply_markup=await menu.get_exit_button())
+
+        else:
+            self.db.SQL(f"UPDATE `users` SET `username` = '{message.text}' WHERE `user_id` = '{message.from_user.id}' AND `username` = '' ORDER BY id DESC LIMIT 1")
+
+            await message.answer(text="Создайте пароль для вашего аккаунта:",
+                             reply_markup=await menu.get_exit_button())
+
+    async def signin_create_password(self,
+                     message: Message
+                     ) -> None:
+        self.db.SQL(f"UPDATE `users` SET `password` = '{message.text}' WHERE `user_id` = '{message.from_user.id}' AND `password` = '' ORDER BY id DESC LIMIT 1")
+
+        await message.answer(text="Вы успешно зарегистрировались!",
+                             reply_markup=await menu.get_menu(menu='start', user=message.from_user))
 
     async def start_questions(self,
                               message: Message

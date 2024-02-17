@@ -3,6 +3,9 @@ from ..Bot import Action as Action
 from ..Bot import Menu as menu
 from ..DataBase import get_db_connection
 
+import asyncio
+
+from aiogram import Bot
 from aiogram.filters import Filter
 from aiogram.types import CallbackQuery, Message
     
@@ -113,4 +116,50 @@ class UserNoConfirmed(Filter):
             if user_answers:
                 return await Action.get_answer_from_list(list=user_answers)
                     
+        return False
+    
+class UserCreateName(Filter):
+    
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        db = get_db_connection()
+        id_usernames = db.SQL(f"SELECT `username` FROM `users` WHERE `user_id` = '{message.from_user.id}'")        
+
+        if id_usernames:
+            for row in id_usernames:
+                if not row[0]:
+                    return True
+
+        return False
+    
+class UserCreatePassword(Filter):
+
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        db = get_db_connection()
+        id_passwords = db.SQL(f"SELECT `password` FROM `users` WHERE `user_id` = '{message.from_user.id}'")        
+
+        if id_passwords:
+            for row in id_passwords:
+                if not row[0]:
+                    return True
+
+        return False
+    
+class UserExitSignin(Filter):
+
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        if message.text.lower() == 'выйти':
+            db = get_db_connection()
+            id_rows = db.SQL(f"SELECT `username`, `password` FROM `users` WHERE `user_id` = '{message.from_user.id}'")        
+
+            if id_rows:
+                for row in id_rows:
+                    if not row[0] or not row[1]:
+                        return True
+
         return False
