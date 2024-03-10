@@ -23,6 +23,7 @@ class Answer:
     async def start(self,
                     message: Message
                     ) -> None:
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
         user_data = message.from_user
         lang = await Action.get_language(user=user_data)
         connected_id = self.db.SQL(f"SELECT `connected_id` FROM `users`")
@@ -37,11 +38,17 @@ class Answer:
                 break
         
         if connected:
+            upath.data[str(message.from_user.id)] = 'user-cabinet'
+            upath.update()
+
             await message.answer(
                                 text='Приветствую вас снова!\nВыберите, что вы хотите сделать в меню снизу, или пришлите сюда пригласительное сообщение к данному боту, если хотите пройти какой-либо опрос.',
                                 reply_markup=await menu.get_menu(menu='start', user=user_data)
             )
         else:
+            upath.data[str(message.from_user.id)] = ''
+            upath.update()
+
             await message.answer(
                                 text=f'{lang.welcome.format(username=username)}\n{lang.about}\n\n{lang.help}',
                                 reply_markup=await menu.get_menu(menu='start', user=user_data)
@@ -49,8 +56,173 @@ class Answer:
     
     async def get_asks(self,
                        message: Message):
-        await message.answer(text="Выберите действие или опрос.",
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        
+        upath.data[str(message.from_user.id)] = 'user-cabinet/question'
+        upath.update()
+
+        await message.answer(text="Выберите действие или опрос:",
                              reply_markup=await menu.get_menu_myasks(message.from_user))
+        
+    async def exit_asks(self, message:Message):
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        
+        upath.data[str(message.from_user.id)] = 'user-cabinet'
+        upath.update()
+
+        await message.answer(text="Выберите действие:",
+                             reply_markup=await menu.get_menu(menu='start', user=message.from_user))
+        
+    async def get_ask(self,
+                       message: Message):
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        
+        upath.data[str(message.from_user.id)] = f'user-cabinet/question/{message.text}'
+        upath.update()
+
+        await message.answer(text="Выберите действие:",
+                             reply_markup=await menu.get_menu_myask(asker_key=message.text))
+        
+    async def create_ask(self,
+                        message: Message):  
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        split_path = upath.data[str(message.from_user.id)].split('/')
+
+        username = self.db.SQL(f"SELECT `username` FROM `users` WHERE `asker_key` LIKE '%,{split_path[2]}:ru%'")
+        asks = self.db.SQL(f"SELECT `asker_key` FROM `asks` WHERE `asker_key` = '{split_path[2]}'")
+        queue_ask = len(asks)+1 if asks else 1
+        self.db.SQL(f"INSERT INTO `asks` (`user_id`, `username`, `asker_key`, `queue`, `ask`, `type`, `answers`) VALUES ('{message.from_user.id}', '{username[0][0]}', '{split_path[2]}', '{queue_ask}', '', '', '')")
+        
+        upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}/create'
+        upath.update()
+
+        send_message = await message.answer(text="Идет обработка данных...",
+                                            reply_markup=ReplyKeyboardRemove())
+        await self.bot.delete_message(chat_id=send_message.chat.id, message_id=send_message.message_id)
+
+        await message.answer(text="Выберите тип ответа на вопрос",
+                             reply_markup=await menu.get_ask_type())
+        
+    async def set_type_ask(self,
+                           callback: CallbackQuery):
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        split_path = upath.data[str(callback.from_user.id)].split('/')
+
+        self.db.SQL(f"UPDATE `asks` SET `type` = '{callback.data.split(':')[1]}' WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
+        
+        await self.bot.delete_message(chat_id=callback.message.chat.id,
+                                      message_id=callback.message.message_id)
+
+        ask = self.db.SQL(f"SELECT `ask` FROM `asks` WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
+        if ask and ask[0][0] == '':
+            await self.bot.send_message(chat_id=callback.from_user.id,
+                                        text="Напишите ваш вопрос:",
+                                        reply_markup=await menu.get_exit_button())
+
+        await callback.answer()
+        
+    async def exit_create_ask(self,
+                              callback: CallbackQuery):
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        split_path = upath.data[str(callback.from_user.id)].split('/')
+
+        ask = self.db.SQL(f"SELECT `ask` FROM `asks` WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
+        if ask and ask[0][0] == '':
+            self.db.SQL(f"DELETE FROM `asks` WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
+
+        upath.data[str(callback.from_user.id)] = f'user-cabinet/question/{split_path[2]}'
+        upath.update()
+
+        await self.bot.delete_message(chat_id=callback.message.chat.id,
+                                      message_id=callback.message.message_id)
+
+        await self.bot.send_message(chat_id=callback.from_user.id,
+                                    text="Выберите действие:",
+                                    reply_markup=await menu.get_menu_myask(asker_key=split_path[2]))
+        
+        await callback.answer()
+
+    async def set_ask_text(self,
+                           message: Message):
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        split_path = upath.data[str(message.from_user.id)].split('/')
+
+        self.db.SQL(f"UPDATE `asks` SET `ask` = '{message.text}' WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
+
+        ask_type = self.db.SQL(f"SELECT `type` FROM `asks` WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
+        if ask_type and ask_type[0][0] == 'note':
+            upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}/create-answer'
+            upath.update()
+            await self.bot.send_message(chat_id=message.from_user.id,
+                                        text="Напишите ваши варианты ответов, разделенные через запятую (,):",
+                                        reply_markup=await menu.get_exit_button())
+        
+        else:
+            upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}'
+            upath.update()
+
+            await message.answer(text="Выберите действие:",
+                                 reply_markup=await menu.get_menu_myask(asker_key=split_path[2]))
+        
+    async def set_ask_answer(self,
+                           message: Message):
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        split_path = upath.data[str(message.from_user.id)].split('/')
+
+        self.db.SQL(f"UPDATE `asks` SET `answers` = '{message.text}' WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
+        
+        upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}'
+        upath.update()
+
+        await message.answer(text="Выберите действие:",
+                             reply_markup=await menu.get_menu_myask(asker_key=split_path[2]))
+        
+
+    async def exit_create_ask_text(self,
+                                   message: Message):
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        split_path = upath.data[str(message.from_user.id)].split('/')
+
+        ask = self.db.SQL(f"SELECT `ask` FROM `asks` WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
+        if ask and ask[0][0] == '':
+            self.db.SQL(f"DELETE FROM `asks` WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
+
+        upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}'
+        upath.update()
+
+        await self.bot.send_message(chat_id=message.from_user.id,
+                                    text="Выберите действие:",
+                                    reply_markup=await menu.get_menu_myask(asker_key=split_path[2]))
+
+
+    async def create_asker(self, message: Message):
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        upath.data[str(message.from_user.id)] = 'user-cabinet/question/create'
+        upath.update()
+
+        await message.answer(text="Ведите ключевое слово или фразу, по которым другие будут получать доступ к вашему опросу:",
+                             reply_markup=await menu.get_exit_button())
+    
+    async def set_asker_name(self, message: Message):
+        text = ''.join(message.text.split('/'))
+        exist_key = self.db.SQL(f"SELECT `id` FROM `users` WHERE `asker_key` LIKE '%{',' + text + ':ru'}%'")
+
+        if exist_key:
+            await message.answer(text="Данное ключевое слово/фраза уже существует!\nПожалуйста, введите другое:",
+                             reply_markup=await menu.get_exit_button())
+            
+            return
+
+        data_connected = self.db.SQL(f"SELECT `id`, `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
+        self.db.SQL(f"UPDATE `users` SET `asker_key` = '{data_connected[0][1]+','+text+':ru'}' WHERE `id` = '{data_connected[0][0]}'")
+  
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        upath.data[str(message.from_user.id)] = f'user-cabinet/question/{text}'
+        upath.update()
+
+        await message.answer(text="Вы успешно создали новый опрос!\nВыберите действие:",
+                             reply_markup=await menu.get_menu_myask(asker_key=text))
+
 
     async def login_start(self,
                           message: Message
@@ -87,12 +259,17 @@ class Answer:
         usernames = self.db.SQL(f"SELECT `username` FROM `users`")
 
         if usernames:
+            exist = False
             for username in usernames:
-                if username[0] != message.text:
-                    await message.answer(text="Этого имени не существует!\nВведите, пожалуйста, существующее имя:",
+                if username[0] == message.text:
+                    exist = True 
+                    break
+            
+            if not exist:
+                await message.answer(text="Этого имени не существует!\nВведите, пожалуйста, существующее имя:",
                                         reply_markup=await menu.get_exit_button())
-                    
-                    return
+                
+                return
 
         file = fm.OpenJson(file_name='Module/Bot/data/login_procces.json')
         file.data[str(message.from_user.id)]['username'] = message.text
@@ -105,7 +282,11 @@ class Answer:
                           message: Message
                           ):
         file = fm.OpenJson(file_name='Module/Bot/data/login_procces.json')
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
         password = self.db.SQL(f"SELECT `password`, `connected_id` FROM `users` WHERE `username` = '{file.data[str(message.from_user.id)]['username']}'")
+
+        await self.bot.delete_message(chat_id=message.chat.id,
+                                      message_id=message.message_id)
 
         if password[0][0] == message.text:
             connected_id = password[0][1].split(',')
@@ -116,6 +297,9 @@ class Answer:
             
             await message.answer(text="Вы успешно вошли в аккаунт!",
                                     reply_markup=await menu.get_menu(menu='start', user=message.from_user))
+            
+            upath.data[str(message.from_user.id)] = 'user-cabinet'
+            upath.update()
             
             del file.data[str(message.from_user.id)]
             file.update()
@@ -170,14 +354,28 @@ class Answer:
     async def signin_create_password(self,
                      message: Message
                      ) -> None:
-        self.db.SQL(f"UPDATE `users` SET `password` = '{message.text}' WHERE `user_id` = '{message.from_user.id}' AND `password` = '' ORDER BY id DESC LIMIT 1")
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
 
+        await self.bot.delete_message(chat_id=message.chat.id,
+                                      message_id=message.message_id)
+
+        self.db.SQL(f"UPDATE `users` SET `password` = '{message.text}' WHERE `user_id` = '{message.from_user.id}' AND `password` = '' ORDER BY id DESC LIMIT 1")
+        
         await message.answer(text="Вы успешно зарегистрировались!",
                              reply_markup=await menu.get_menu(menu='start', user=message.from_user))
+        
+        upath.data[str(message.from_user.id)] = 'user-cabinet'
+        upath.update()
+
+        
 
     async def start_questions(self,
                               message: Message
                               ) -> None:
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        upath.data[str(message.from_user.id)] = ''
+        upath.update()
+
         asker_key = message.text.split('"')[1]
         user_data = message.from_user
     
@@ -190,6 +388,9 @@ class Answer:
         
         keyboard = await menu.get_ask_keyboard(ask_data=ask_data)
         
+        if not keyboard:
+            keyboard = await menu.get_exit_button()
+
         await message.answer(text=ask_data[0][1],
                                 reply_markup=keyboard)
 
@@ -200,6 +401,10 @@ class Answer:
     async def get_answer(self,
                          message: Message|CallbackQuery
                          ) -> None:
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        upath.data[str(message.from_user.id)] = ''
+        upath.update()
+
         user_answer: tuple
         user_data = message.from_user
         lang = await Action.get_language(user=user_data)
@@ -215,7 +420,13 @@ class Answer:
             else:
                 return
 
-            await Action.add_user_answer(answer=message.text if type(message) == Message else message.data.split(':')[1],
+            #download voice message
+            #voice = await self.bot.get_file(message.voice.file_id)
+            #file = await self.bot.download_file(voice.file_path)
+            #with open(f"voice_{message.voice.file_id}.ogg", 'wb') as new_file:
+            #    new_file.write(file.read())
+
+            await Action.add_user_answer(answer=message.data.split(':')[1] if type(message) != Message else message.text if not message.voice else message.voice.file_id,
                                    user_id=user_data.id,
                                    ask_id=user_answer[0],
                                    asker_key=user_answer[1])
@@ -230,6 +441,10 @@ class Answer:
     async def confirmed_answer(self,
                                callback: CallbackQuery
                                ) -> None:
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        upath.data[str(callback.from_user.id)] = ''
+        upath.update()
+
         user_answer: tuple
         message = callback.message
         user_data = callback.from_user
@@ -254,12 +469,19 @@ class Answer:
                                             ask_queue=user_answer[0]+1)
 
             if not ask_data:
+                upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+                upath.data[str(callback.from_user.id)] = f'user-cabinet'
+                upath.update()
+
                 await self.bot.send_message(chat_id=message.chat.id,
                                                        text=lang.finished_question,
                                                        reply_markup=await menu.get_menu(menu='start', user=user_data))
             
             else:
                 keyboard = await menu.get_ask_keyboard(ask_data=ask_data)
+
+                if not keyboard:
+                    keyboard = await menu.get_exit_button()
 
                 await self.bot.send_message(chat_id=message.chat.id,
                                                            text=ask_data[0][1],
@@ -274,6 +496,10 @@ class Answer:
     async def no_confirmed_answer(self,
                                   callback: CallbackQuery
                                   ) -> None:
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        upath.data[str(callback.from_user.id)] = ''
+        upath.update()
+
         user_answer: tuple
         message = callback.message
         user_data = callback.from_user
@@ -297,10 +523,10 @@ class Answer:
             ask_data = await Action.get_ask(asker_key=user_answer[1],
                                             ask_queue=user_answer[0])
             
-            keyboard = None
+            keyboard = await menu.get_exit_button()
             if ask_data:
                 keyboard = await menu.get_ask_keyboard(ask_data=ask_data)
-
+   
             await self.bot.send_message(chat_id=message.chat.id,
                                                 text=lang.message_for_edit,
                                                 reply_markup=keyboard)

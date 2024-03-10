@@ -89,7 +89,7 @@ async def get_exit_button(
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text='Выйти')
+                KeyboardButton(text='⬅️')
             ]
         ],
         resize_keyboard=True
@@ -109,12 +109,57 @@ async def get_menu_myasks(user_data: user.User) -> ReplyKeyboardMarkup|None:
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text='Новый опрос')
+                KeyboardButton(text='Новый опрос'),
+                KeyboardButton(text='⬅️')
             ]
         ] + [
-            [KeyboardButton(text=button.split(':')[0])] for button in db.SQL(f"SELECT `asker_key` FROM `users` WHERE `username` = '{connected_username}'")[0][0].split(',')
+            [KeyboardButton(text=button.split(':')[0])] 
+            for button in db.SQL(f"SELECT `asker_key` FROM `users` WHERE `username` = '{connected_username}'")[0][0].split(',')
         ],
         resize_keyboard=True
     )
 
     return keyboard
+
+async def get_menu_myask(asker_key:str) -> ReplyKeyboardMarkup|None:
+    db = get_db_connection()
+    asks = db.SQL(f"SELECT `ask` FROM `asks` WHERE `asker_key` = '{asker_key}'")
+
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text='Новый вопрос'),
+                KeyboardButton(text='⬅️')
+            ]
+        ] + ([
+            [KeyboardButton(text=button[0])]
+            for button in asks
+        ] if asks else []),
+        resize_keyboard=True
+    )
+
+    return keyboard
+
+async def get_ask_type() -> InlineKeyboardMarkup|None:
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text='Текст',
+                callback_data='SetNewAskType:text',
+                )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Кнопки',
+                callback_data='SetNewAskType:note',
+                )
+        ],
+        [
+            InlineKeyboardButton(
+                text='⬅️',
+                callback_data='SetNewAskType:⬅️',
+                )
+        ]
+    ]
+        
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
