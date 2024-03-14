@@ -6,6 +6,7 @@ from ..FileControl import FileManage as fm
 from ..DataBase import get_db_connection
 
 import asyncio
+from copy import deepcopy
 
 from aiogram import Bot
 from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery
@@ -76,12 +77,13 @@ class Answer:
     async def get_ask(self,
                        message: Message):
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
-        
-        upath.data[str(message.from_user.id)] = f'user-cabinet/question/{message.text}'
+        new_text = message.text.replace("'", "''")
+
+        upath.data[str(message.from_user.id)] = f'user-cabinet/question/{new_text}'
         upath.update()
 
         await message.answer(text="Выберите действие:",
-                             reply_markup=await menu.get_menu_myask(asker_key=message.text))
+                             reply_markup=await menu.get_menu_myask(asker_key=new_text))
         
     async def create_ask(self,
                         message: Message):  
@@ -146,8 +148,10 @@ class Answer:
                            message: Message):
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
         split_path = upath.data[str(message.from_user.id)].split('/')
+        
+        new_text = message.text.replace("'", "''")
 
-        self.db.SQL(f"UPDATE `asks` SET `ask` = '{message.text}' WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
+        self.db.SQL(f"UPDATE `asks` SET `ask` = '{new_text}' WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
 
         ask_type = self.db.SQL(f"SELECT `type` FROM `asks` WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
         if ask_type and ask_type[0][0] == 'note':
@@ -166,10 +170,11 @@ class Answer:
         
     async def set_ask_answer(self,
                            message: Message):
+        new_text = message.text.replace("'", "''")
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
         split_path = upath.data[str(message.from_user.id)].split('/')
 
-        self.db.SQL(f"UPDATE `asks` SET `answers` = '{message.text}' WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
+        self.db.SQL(f"UPDATE `asks` SET `answers` = '{new_text}' WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
         
         upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}'
         upath.update()
@@ -204,7 +209,8 @@ class Answer:
                              reply_markup=await menu.get_exit_button())
     
     async def set_asker_name(self, message: Message):
-        text = ''.join(message.text.split('/'))
+        new_text = message.text.replace("'", "''")
+        text = ''.join(new_text.split('/'))
         exist_key = self.db.SQL(f"SELECT `id` FROM `users` WHERE `asker_key` LIKE '%{',' + text + ':ru'}%'")
 
         if exist_key:
@@ -256,12 +262,13 @@ class Answer:
     async def login_name(self,
                           message: Message
                           ):
+        new_text = message.text.replace("'", "''")
         usernames = self.db.SQL(f"SELECT `username` FROM `users`")
 
         if usernames:
             exist = False
             for username in usernames:
-                if username[0] == message.text:
+                if username[0] == new_text:
                     exist = True 
                     break
             
@@ -272,7 +279,7 @@ class Answer:
                 return
 
         file = fm.OpenJson(file_name='Module/Bot/data/login_procces.json')
-        file.data[str(message.from_user.id)]['username'] = message.text
+        file.data[str(message.from_user.id)]['username'] = new_text
         file.update()
         
         await message.answer(text="Введите пароль от аккаунта:",
@@ -281,6 +288,7 @@ class Answer:
     async def login_password(self,
                           message: Message
                           ):
+        new_text = message.text.replace("'", "''")
         file = fm.OpenJson(file_name='Module/Bot/data/login_procces.json')
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
         password = self.db.SQL(f"SELECT `password`, `connected_id` FROM `users` WHERE `username` = '{file.data[str(message.from_user.id)]['username']}'")
@@ -288,7 +296,7 @@ class Answer:
         await self.bot.delete_message(chat_id=message.chat.id,
                                       message_id=message.message_id)
 
-        if password[0][0] == message.text:
+        if password[0][0] == new_text:
             connected_id = password[0][1].split(',')
             connected_id.append(str(message.from_user.id))
             connected_id = ','.join(connected_id)
@@ -339,14 +347,15 @@ class Answer:
     async def signin_create_name(self,
                      message: Message
                      ) -> None:
-        exit_username = self.db.SQL(f"SELECT `username` FROM `users` WHERE `username` = '{message.text}'")
+        new_text = message.text.replace("'", "''")
+        exit_username = self.db.SQL(f"SELECT `username` FROM `users` WHERE `username` = '{new_text}'")
 
         if exit_username:
             await message.answer(text="Данное имя уже занято!\nВыберите другое:",
                              reply_markup=await menu.get_exit_button())
 
         else:
-            self.db.SQL(f"UPDATE `users` SET `username` = '{message.text}' WHERE `user_id` = '{message.from_user.id}' AND `username` = '' ORDER BY id DESC LIMIT 1")
+            self.db.SQL(f"UPDATE `users` SET `username` = '{new_text}' WHERE `user_id` = '{message.from_user.id}' AND `username` = '' ORDER BY id DESC LIMIT 1")
 
             await message.answer(text="Создайте пароль для вашего аккаунта:",
                              reply_markup=await menu.get_exit_button())
@@ -354,12 +363,13 @@ class Answer:
     async def signin_create_password(self,
                      message: Message
                      ) -> None:
+        new_text = message.text.replace("'", "''")
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
 
         await self.bot.delete_message(chat_id=message.chat.id,
                                       message_id=message.message_id)
 
-        self.db.SQL(f"UPDATE `users` SET `password` = '{message.text}' WHERE `user_id` = '{message.from_user.id}' AND `password` = '' ORDER BY id DESC LIMIT 1")
+        self.db.SQL(f"UPDATE `users` SET `password` = '{new_text}' WHERE `user_id` = '{message.from_user.id}' AND `password` = '' ORDER BY id DESC LIMIT 1")
         
         await message.answer(text="Вы успешно зарегистрировались!",
                              reply_markup=await menu.get_menu(menu='start', user=message.from_user))
@@ -372,11 +382,12 @@ class Answer:
     async def start_questions(self,
                               message: Message
                               ) -> None:
+        new_text = message.text.replace("'", "''")
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
         upath.data[str(message.from_user.id)] = ''
         upath.update()
 
-        asker_key = message.text.split('"')[1]
+        asker_key = new_text.split('"')[1]
         user_data = message.from_user
     
         #Get ask from databse
@@ -401,6 +412,7 @@ class Answer:
     async def get_answer(self,
                          message: Message|CallbackQuery
                          ) -> None:
+        new_text = message.text.replace("'", "''") if type(message) == Message else message.data.replace("'", "''")
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
         upath.data[str(message.from_user.id)] = ''
         upath.update()
@@ -426,7 +438,7 @@ class Answer:
             #with open(f"voice_{message.voice.file_id}.ogg", 'wb') as new_file:
             #    new_file.write(file.read())
 
-            await Action.add_user_answer(answer=message.data.split(':')[1] if type(message) != Message else message.text if not message.voice else message.voice.file_id,
+            await Action.add_user_answer(answer=message.data.split(':')[1] if type(message) != Message else new_text if not message.voice else message.voice.file_id,
                                    user_id=user_data.id,
                                    ask_id=user_answer[0],
                                    asker_key=user_answer[1])
