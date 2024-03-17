@@ -142,7 +142,9 @@ class UserExitAsker(Filter):
     async def __call__(self,
                        message: Message
                        ) -> bool:
-        if message.text.lower() == '⬅️':
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+
+        if str(message.from_user.id) in upath.data and upath.data[str(message.from_user.id)] == 'in-question' and message.text.lower() == '⬅️':
             db = get_db_connection()
             db.SQL(f"DELETE FROM `answers` WHERE `user_id` = '{message.from_user.id}' AND (`is_answer` = '0' OR `confirmed` = '0')")
 
@@ -234,6 +236,21 @@ class UserLoginPassword(Filter):
         if str(message.from_user.id) in file.data and not file.data[str(message.from_user.id)]['password']:
             return True
 
+        return False
+
+class UserExitAccount(Filter):
+
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        
+        if str(message.from_user.id) in upath.data and upath.data[str(message.from_user.id)] == 'user-cabinet' and message.text.lower() == '⬅️':
+            db = get_db_connection()
+            db.SQL(f"DELETE FROM `answers` WHERE `user_id` = '{message.from_user.id}' AND (`is_answer` = '0' OR `confirmed` = '0')")
+
+            return True
+                    
         return False
     
 class GetAsks(Filter):
@@ -345,6 +362,136 @@ class GetAsk(Filter):
                 return True
 
         return False
+
+class DeleteAsk(Filter):
+    
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        split_path = upath.data[str(message.from_user.id)].split('/')
+
+        db = get_db_connection()
+        asker_keys = db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
+    
+        if message.text == '🚫Удалить опрос🚫' and asker_keys and len(split_path) == 3 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
+            return True
+
+        return False
+    
+class GetAskAsk(Filter):
+    
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        split_path = upath.data[str(message.from_user.id)].split('/')
+
+        db = get_db_connection()
+        asker_keys = db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
+    
+        if asker_keys and len(split_path) == 3 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
+            queue_ask = db.SQL(f"SELECT `queue` FROM `asks` WHERE `asker_key` = '{split_path[2]}' AND `ask` = '{message.text}'")
+            
+            if queue_ask:
+                return True
+
+        return False
+    
+class EditAskAskText(Filter):
+    
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        split_path = upath.data[str(message.from_user.id)].split('/')
+
+        db = get_db_connection()
+        asker_keys = db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
+    
+        if message.text == 'Редактировать' and asker_keys and len(split_path) == 4 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
+            queue_ask = db.SQL(f"SELECT `queue` FROM `asks` WHERE `asker_key` = '{split_path[2]}' AND `ask` = '{split_path[3]}'")
+            
+            if queue_ask:
+                return True
+
+        return False
+
+class ExitEditAskAskText(Filter):
+
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        split_path = upath.data[str(message.from_user.id)].split('/')
+
+        db = get_db_connection()
+        asker_keys = db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
+    
+        if message.text == '⬅️' and asker_keys and len(split_path) == 5 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0] and split_path[4] == 'edit-text':
+            queue_ask = db.SQL(f"SELECT `queue` FROM `asks` WHERE `asker_key` = '{split_path[2]}' AND `ask` = '{split_path[3]}'")
+            
+            if queue_ask:
+                return True
+
+        return False
+    
+class SetEditAskAskText(Filter):
+
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        split_path = upath.data[str(message.from_user.id)].split('/')
+
+        db = get_db_connection()
+        asker_keys = db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
+    
+        if asker_keys and len(split_path) == 5 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0] and split_path[4] == 'edit-text':
+            queue_ask = db.SQL(f"SELECT `queue` FROM `asks` WHERE `asker_key` = '{split_path[2]}' AND `ask` = '{split_path[3]}'")
+            
+            if queue_ask:
+                return True
+
+        return False
+
+class DeleteAskAsk(Filter):
+    
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        split_path = upath.data[str(message.from_user.id)].split('/')
+
+        db = get_db_connection()
+        asker_keys = db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
+    
+        if message.text == '🚫Удалить вопрос🚫' and asker_keys and len(split_path) == 4 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
+            queue_ask = db.SQL(f"SELECT `queue` FROM `asks` WHERE `asker_key` = '{split_path[2]}' AND `ask` = '{split_path[3]}'")
+            
+            if queue_ask:
+                return True
+
+        return False
+    
+class ExitAskAsk(Filter):
+    
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        split_path = upath.data[str(message.from_user.id)].split('/')
+        
+        db = get_db_connection()
+        asker_keys = db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
+
+        if asker_keys and len(split_path) == 4 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
+            queue_ask = db.SQL(f"SELECT `queue` FROM `asks` WHERE `asker_key` = '{split_path[2]}' AND `ask` = '{split_path[3]}'")
+        
+            if queue_ask and message.text.lower() == '⬅️':
+                return True
+
+        return False
         
 class CreateAsk(Filter):
     
@@ -434,8 +581,9 @@ class SetAskText(Filter):
             if len(split_path) == 4:
                 db = get_db_connection()
                 asker_keys = db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
+                ask_type = db.SQL(f"SELECT `type` FROM `asks` WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
                 
-                if asker_keys and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0] and split_path[3] == 'create':
+                if ask_type[0][0] in ['note', 'text'] and asker_keys and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0] and split_path[3] == 'create':
                     return True
 
         return False

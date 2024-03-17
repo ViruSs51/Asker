@@ -26,9 +26,9 @@ async def get_menu(menu: str,
                     #[
                     #    KeyboardButton(text='Настройки')
                     #],
-                    #[
-                    #    KeyboardButton(text='Выйти')
-                    #]
+                    [
+                        KeyboardButton(text='⬅️')
+                    ]
                 ],
                 resize_keyboard=True,
             )
@@ -129,12 +129,28 @@ async def get_menu_myask(asker_key:str) -> ReplyKeyboardMarkup|None:
         keyboard=[
             [
                 KeyboardButton(text='Новый вопрос'),
-                KeyboardButton(text='⬅️')
-            ]
+                KeyboardButton(text='Ответы')
+            ],
+            [KeyboardButton(text='🚫Удалить опрос🚫')],
+            [KeyboardButton(text='⬅️')]
         ] + ([
             [KeyboardButton(text=button[0])]
             for button in asks
         ] if asks else []),
+        resize_keyboard=True
+    )
+
+    return keyboard
+
+async def get_menu_myaskask() -> ReplyKeyboardMarkup|None:
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text='Редактировать'),
+                KeyboardButton(text='🚫Удалить вопрос🚫')
+            ],
+            [KeyboardButton(text='⬅️')]
+        ],
         resize_keyboard=True
     )
 

@@ -67,6 +67,7 @@ class AskerBot(MainBot):
         self.dp.callback_query(f.UserKeyboardAnswer())(self.bot_control.get_answer)
 
         #Login
+        self.dp.message(f.UserExitAccount())(self.bot_control.exit_from_account)
         self.dp.message(f.UserExitLogin())(self.bot_control.exit_login)
         self.dp.message(f.UserLoginName())(self.bot_control.login_name)
         self.dp.message(f.UserLoginPassword())(self.bot_control.login_password)
@@ -79,12 +80,19 @@ class AskerBot(MainBot):
         self.dp.message(F.text.lower() == 'зарегистрироваться')(self.bot_control.signin_start)
 
         #User asks
+        self.dp.message(f.ExitEditAskAskText())(self.bot_control.exit_edit_askask_text)
+        self.dp.message(f.ExitAskAsk())(self.bot_control.exit_askask)
         self.dp.message(f.ExitCreateAskText())(self.bot_control.exit_create_ask_text)
         self.dp.message(f.ExitAsk())(self.bot_control.get_asks)
         self.dp.message(f.ExitAsks())(self.bot_control.exit_asks)
+        self.dp.message(f.DeleteAskAsk())(self.bot_control.delete_askask)
+        self.dp.message(f.SetEditAskAskText())(self.bot_control.set_edit_askask_text)
+        self.dp.message(f.EditAskAskText())(self.bot_control.edit_askask_text)
         self.dp.message(f.SetAskAnswer())(self.bot_control.set_ask_answer)
         self.dp.message(f.SetAskText())(self.bot_control.set_ask_text)
         self.dp.message(f.CreateAsk())(self.bot_control.create_ask)
+        self.dp.message(f.GetAskAsk())(self.bot_control.get_askask)
+        self.dp.message(f.DeleteAsk())(self.bot_control.delete_asker)
         self.dp.message(f.GetAsk())(self.bot_control.get_ask)
         self.dp.message(f.GetAsks())(self.bot_control.get_asks)
         self.dp.message(f.NewAsk())(self.bot_control.create_asker)

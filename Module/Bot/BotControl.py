@@ -36,7 +36,7 @@ class Answer:
         for connect in connected_id:
             if str(user_data.id) in connect[0].split(','):
                 connected = True
-                break
+                break   
         
         if connected:
             upath.data[str(message.from_user.id)] = 'user-cabinet'
@@ -84,6 +84,86 @@ class Answer:
 
         await message.answer(text="Выберите действие:",
                              reply_markup=await menu.get_menu_myask(asker_key=new_text))
+        
+    async def get_askask(self,
+                         message: Message):
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        new_text = message.text.replace("'", "''")
+
+        upath.data[str(message.from_user.id)] = f'{upath.data[str(message.from_user.id)]}/{new_text}'
+        upath.update()
+
+        await message.answer(text="Выберите действие:",
+                             reply_markup=await menu.get_menu_myaskask())
+        
+    async def edit_askask_text(self,
+                           message: Message):
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        
+        upath.data[str(message.from_user.id)] = upath.data[str(message.from_user.id)] + '/edit-text'
+        upath.update()
+
+        await self.bot.send_message(chat_id=message.from_user.id,
+                                    text="Напишите ваш новый текст для вопроса:",
+                                    reply_markup=await menu.get_exit_button())
+        
+    async def exit_edit_askask_text(self,
+                           message: Message):
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        split_path = upath.data[str(message.from_user.id)].split('/')
+        
+        upath.data[str(message.from_user.id)] = '/'.join(split_path[:4])
+        upath.update()
+
+        await self.bot.send_message(chat_id=message.from_user.id,
+                                    text="Выберите действие:",
+                                    reply_markup=await menu.get_menu_myaskask())
+    
+    async def set_edit_askask_text(self,
+                           message: Message):
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        split_path = upath.data[str(message.from_user.id)].split('/')
+        new_text = message.text.replace("'", "''")
+
+        self.db.SQL(f"UPDATE `asks` SET `ask` = '{new_text}' WHERE `asker_key` = '{split_path[2]}' AND `ask` = '{split_path[3]}'")
+
+        upath.data[str(message.from_user.id)] = '/'.join(split_path[:3]) + f'/{message.text}'
+        upath.update()
+
+        await self.bot.send_message(chat_id=message.from_user.id,
+                                    text="Вы успешно заменили текст данного вопроса!\nВыберите действие:",
+                                    reply_markup=await menu.get_menu_myaskask())
+        
+    async def delete_askask(self,
+                           message: Message):
+        
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        split_path = upath.data[str(message.from_user.id)].split('/')
+
+        queue_ask = self.db.SQL(f"SELECT `queue` FROM `asks` WHERE `asker_key` = '{split_path[2]}' AND `ask` = '{split_path[3]}'")
+
+        self.db.SQL(f"DELETE FROM `asks` WHERE `asker_key` = '{split_path[2]}' AND `queue` = '{queue_ask[0][0]}'")
+        self.db.SQL(f"UPDATE `asks` SET `queue`=`queue`-1 WHERE `asker_key`='{split_path[2]}' AND `queue` > {queue_ask[0][0]}")
+
+        self.db.SQL(f"DELETE FROM `answers` WHERE `asker_key` = '{split_path[2]}' AND `ask_id` = '{queue_ask[0][0]}'")
+        self.db.SQL(f"UPDATE `answers` SET `ask_id`=`ask_id`-1 WHERE `asker_key`='{split_path[2]}' AND `ask_id` > {queue_ask[0][0]}")
+
+        upath.data[str(message.from_user.id)] = '/'.join(split_path[:3])
+        upath.update()
+
+        await message.answer(text="Вы успешно удалили вопрос!\nВыберите действие:",
+                             reply_markup=await menu.get_menu_myask(asker_key=split_path[2]))
+    
+    async def exit_askask(self,
+                         message: Message):
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        split_path = upath.data[str(message.from_user.id)].split('/')
+
+        upath.data[str(message.from_user.id)] = '/'.join(split_path[:3])
+        upath.update()
+
+        await message.answer(text="Выберите действие:",
+                             reply_markup=await menu.get_menu_myask(asker_key=split_path[2]))
         
     async def create_ask(self,
                         message: Message):  
@@ -162,11 +242,11 @@ class Answer:
                                         reply_markup=await menu.get_exit_button())
         
         else:
-            upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}'
+            upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}/{new_text}'
             upath.update()
 
             await message.answer(text="Выберите действие:",
-                                 reply_markup=await menu.get_menu_myask(asker_key=split_path[2]))
+                                 reply_markup=await menu.get_menu_myaskask())
         
     async def set_ask_answer(self,
                            message: Message):
@@ -176,11 +256,12 @@ class Answer:
 
         self.db.SQL(f"UPDATE `asks` SET `answers` = '{new_text}' WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
         
-        upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}'
+        ask = self.db.SQL(f"SELECT `ask` FROM `asks` WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
+        upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}/{ask[0][0]}'
         upath.update()
 
         await message.answer(text="Выберите действие:",
-                             reply_markup=await menu.get_menu_myask(asker_key=split_path[2]))
+                             reply_markup=await menu.get_menu_myaskask())
         
 
     async def exit_create_ask_text(self,
@@ -228,6 +309,26 @@ class Answer:
 
         await message.answer(text="Вы успешно создали новый опрос!\nВыберите действие:",
                              reply_markup=await menu.get_menu_myask(asker_key=text))
+    
+    async def delete_asker(self,
+                           message: Message):
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+
+        self.db.SQL(f"DELETE FROM `asks` WHERE `asker_key` = '{upath.data[str(message.from_user.id)].split('/')[2]}'")
+        self.db.SQL(f"DELETE FROM `answers` WHERE `asker_key` = '{upath.data[str(message.from_user.id)].split('/')[2]}'")
+
+        data_connected = self.db.SQL(f"SELECT `id`, `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
+        new_asker_list = data_connected[0][1].split(',')
+        new_asker_list.remove(upath.data[str(message.from_user.id)].split('/')[2] + ':ru')
+
+        new_asker= ','.join(new_asker_list)
+        self.db.SQL(f"UPDATE `users` SET `asker_key` = '{new_asker}' WHERE `id` = '{data_connected[0][0]}'")
+
+        upath.data[str(message.from_user.id)] = 'user-cabinet/question'
+        upath.update()
+
+        await message.answer(text="Вы успешно удалили опрос!\nВыберите действие:",
+                             reply_markup=await menu.get_menu_myasks(user_data=message.from_user))
 
 
     async def login_start(self,
@@ -377,14 +478,37 @@ class Answer:
         upath.data[str(message.from_user.id)] = 'user-cabinet'
         upath.update()
 
+    async def exit_from_account(self,
+                                message: Message
+                                ):
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        user_data = message.from_user
+        connected_id = self.db.SQL(f"SELECT `id`, `connected_id` FROM `users`")
         
+        user = check.User(user=user_data)
+
+        for connect in connected_id:
+            if str(user_data.id) in connect[1].split(','):
+                new_connected_id_list = connect[1].split(',')
+                new_connected_id_list.remove(str(user_data.id))
+                new_connected_id = ','.join(new_connected_id_list)
+
+                self.db.SQL(f"UPDATE `users` SET `connected_id` = '{new_connected_id}' WHERE `id` = '{connect[0]}'")
+            
+        upath.data[str(user_data.id)] = ''
+        upath.update()
+
+        await message.answer(
+                                text='Вы вышли из своего аккаунта.',
+                                reply_markup=await menu.get_menu(menu='start', user=user_data)
+            )
 
     async def start_questions(self,
                               message: Message
                               ) -> None:
         new_text = message.text.replace("'", "''")
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
-        upath.data[str(message.from_user.id)] = ''
+        upath.data[str(message.from_user.id)] = 'in-question'
         upath.update()
 
         asker_key = new_text.split('"')[1]
@@ -402,6 +526,11 @@ class Answer:
         if not keyboard:
             keyboard = await menu.get_exit_button()
 
+        if keyboard:
+            send_message = await message.answer(text="Идет обработка данных...",
+                                                reply_markup=ReplyKeyboardRemove())
+            await self.bot.delete_message(chat_id=send_message.chat.id, message_id=send_message.message_id)
+
         await message.answer(text=ask_data[0][1],
                                 reply_markup=keyboard)
 
@@ -414,7 +543,7 @@ class Answer:
                          ) -> None:
         new_text = message.text.replace("'", "''") if type(message) == Message else message.data.replace("'", "''")
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
-        upath.data[str(message.from_user.id)] = ''
+        upath.data[str(message.from_user.id)] = 'in-question'
         upath.update()
 
         user_answer: tuple
@@ -454,7 +583,7 @@ class Answer:
                                callback: CallbackQuery
                                ) -> None:
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
-        upath.data[str(callback.from_user.id)] = ''
+        upath.data[str(callback.from_user.id)] = 'in-question'
         upath.update()
 
         user_answer: tuple
@@ -509,7 +638,7 @@ class Answer:
                                   callback: CallbackQuery
                                   ) -> None:
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
-        upath.data[str(callback.from_user.id)] = ''
+        upath.data[str(callback.from_user.id)] = 'in-question'
         upath.update()
 
         user_answer: tuple
