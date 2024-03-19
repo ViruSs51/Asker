@@ -67,19 +67,15 @@ class Answer:
         send_message = await message.answer(text="Идет обработка данных...",
                                             reply_markup=ReplyKeyboardRemove())
         
-        if asker_keys: 
-            for answer in asker_keys:
-                if answer == '':
-                    asker_keys.remove('')
-            asker_keys = [f"asker_key = '{answer.split(':')[0]}'" for answer in asker_keys]
+        if asker_keys:
+            for asker_key in asker_keys:
+                answers = self.db.SQL(f"SELECT `ask_id`, `asker_key`, `answer` FROM `answers` WHERE `asker_key` = '{asker_key.split(':')[0]}' ORDER BY `ask_id` ASC")
+                if answers:
+                    for answer in answers:
+                        anw = list(answer)
+                        anw.insert(2, self.db.SQL(f"SELECT `ask` FROM `asks` WHERE `asker_key` = '{answer[1]}' AND `queue` = '{answer[0]}'")[0][0])
 
-            answers = self.db.SQL(f"SELECT `ask_id`, `asker_key`, `answer` FROM `answers` WHERE {' OR '.join(asker_keys)}")
-            if answers:
-                for answer in answers:
-                    anw = list(answer)
-                    anw.insert(2, self.db.SQL(f"SELECT `ask` FROM `asks` WHERE `asker_key` = '{answer[1]}' AND `queue` = '{answer[0]}'")[0][0])
-
-                    answrs_data.append(anw)
+                        answrs_data.append(anw)
 
         file_link = self.drive.create_table_file(file_name='data/users/answers.csv', 
                                                  file_name_drive=str(message.from_user.id), 
@@ -90,7 +86,7 @@ class Answer:
         await self.bot.send_message(message.chat.id, 
                                     text=f'[Вот ссылка на таблицу с ответами на ваши опросы.]({file_link})', 
                                     parse_mode=ParseMode.MARKDOWN, 
-                                    reply_markup=await menu.get_menu(menu='start', user=message.from_user.id))
+                                    reply_markup=await menu.get_menu(menu='start', user=message.from_user))
     
     async def get_asks(self,
                        message: Message):
@@ -279,11 +275,11 @@ class Answer:
                                         reply_markup=await menu.get_exit_button())
         
         else:
-            upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}/{new_text}'
+            upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}'
             upath.update()
 
             await message.answer(text="Выберите действие:",
-                                 reply_markup=await menu.get_menu_myaskask())
+                                 reply_markup=await menu.get_menu_myask(asker_key=split_path[2]))
         
     async def set_ask_answer(self,
                            message: Message):
@@ -294,11 +290,11 @@ class Answer:
         self.db.SQL(f"UPDATE `asks` SET `answers` = '{new_text}' WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
         
         ask = self.db.SQL(f"SELECT `ask` FROM `asks` WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
-        upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}/{ask[0][0]}'
+        upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}'
         upath.update()
 
         await message.answer(text="Выберите действие:",
-                             reply_markup=await menu.get_menu_myaskask())
+                             reply_markup=await menu.get_menu_myask(asker_key=split_path[2]))
         
 
     async def exit_create_ask_text(self,
@@ -341,11 +337,11 @@ class Answer:
         self.db.SQL(f"UPDATE `users` SET `asker_key` = '{data_connected[0][1]+','+text+':ru'}' WHERE `id` = '{data_connected[0][0]}'")
   
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
-        upath.data[str(message.from_user.id)] = f'user-cabinet/question/{text}'
+        upath.data[str(message.from_user.id)] = f'user-cabinet/question'
         upath.update()
 
         await message.answer(text="Вы успешно создали новый опрос!\nВыберите действие:",
-                             reply_markup=await menu.get_menu_myask(asker_key=text))
+                             reply_markup=await menu.get_menu_myasks(user_data=message.from_user))
     
     async def delete_asker(self,
                            message: Message):
@@ -613,34 +609,9 @@ class Answer:
                                             text=lang.confirm_ask,
                                             reply_markup=await menu.get_confirmed_ask(user=user_data))
             elif type(message) == CallbackQuery:
-                ask_data = await Action.get_ask(asker_key=user_answer[1],
-                                                ask_queue=user_answer[0]+1)
-                
-                if not ask_data:
-                    upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
-                    upath.data[str(message.from_user.id)] = f'user-cabinet'
-                    upath.update()
+                await self.confirmed_answer(callback=message)
 
-                    await self.bot.send_message(chat_id=message.message.chat.id,
-                                                           text=lang.finished_question,
-                                                           reply_markup=await menu.get_menu(menu='start', user=user_data))
-
-                else:
-                    keyboard = await menu.get_ask_keyboard(ask_data=ask_data)
-
-                    if not keyboard:
-                        keyboard = await menu.get_exit_button()
-
-                    await self.bot.send_message(chat_id=message.message.chat.id,
-                                                               text=ask_data[0][1],
-                                                               reply_markup=keyboard)
-
-                    await Action.add_user_answer_template(user_id=user_data.id, 
-                                                          ask_data=ask_data, 
-                                                          asker_key=user_answer[1])
-
-            if type(message) == CallbackQuery:
-                await message.answer() 
+                await message.answer()
     
     async def confirmed_answer(self,
                                callback: CallbackQuery
