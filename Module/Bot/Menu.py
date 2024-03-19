@@ -23,6 +23,9 @@ async def get_menu(menu: str,
                     [
                         KeyboardButton(text='Мой опросы')
                     ],
+                    [
+                        KeyboardButton(text='Ответы')
+                    ],
                     #[
                     #    KeyboardButton(text='Настройки')
                     #],
@@ -129,9 +132,8 @@ async def get_menu_myask(asker_key:str) -> ReplyKeyboardMarkup|None:
         keyboard=[
             [
                 KeyboardButton(text='Новый вопрос'),
-                KeyboardButton(text='Ответы')
+                KeyboardButton(text='🚫Удалить опрос🚫')
             ],
-            [KeyboardButton(text='🚫Удалить опрос🚫')],
             [KeyboardButton(text='⬅️')]
         ] + ([
             [KeyboardButton(text=button[0])]

@@ -252,6 +252,22 @@ class UserExitAccount(Filter):
             return True
                     
         return False
+
+class GetAnswer(Filter):
+
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+
+        if str(message.from_user.id) in upath.data and upath.data[str(message.from_user.id)] == 'user-cabinet':
+            db = get_db_connection()
+            connected_id = db.SQL(f"SELECT `id` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
+
+            if connected_id and message.text.lower() == 'ответы':
+                return True
+
+        return False
     
 class GetAsks(Filter):
 
@@ -290,7 +306,7 @@ class ExitAsks(Filter):
             if connected_id and message.text.lower() == '⬅️':
                 return True
 
-            return False
+        return False
     
 class NewAsk(Filter):
 
@@ -313,7 +329,7 @@ class NewAsk(Filter):
                 if connected and message.text.lower() == 'новый опрос':
                     return True
 
-            return False
+        return False
         
 class NewAskName(Filter):
 
@@ -329,7 +345,7 @@ class NewAskName(Filter):
             if connected_id:
                 return True
 
-            return False
+        return False
         
 class ExitAsk(Filter):
 

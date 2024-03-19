@@ -1,18 +1,36 @@
+from ..FileManage import OpenCSV
+
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
-import gspread
+
 
 class Drive:
 
     def __init__(self
                  ):
-        ...
+        gauth = GoogleAuth()
+        gauth.LocalWebserverAuth()
+        self.__drive = GoogleDrive(gauth)
 
-    def create_file(self,
+    def create_table_file(self,
                     file_name: str,
-                    content: str
-                    ) -> None:
-        ...
+                    file_name_drive: str,
+                    column_title: list[str]|tuple[str],
+                    columns: list[list]|list[tuple]|tuple[list]|tuple[tuple]
+                    ) -> str:
+        file = OpenCSV(file_name=file_name)
+        file.create(column_title=column_title, columns=columns)
 
-if __name__ == '__main__':
-    app = Drive()
+        dfile = self.__drive.CreateFile(metadata={'title': file_name_drive})
+        dfile.SetContentFile(filename=file_name)
+        dfile.Upload()
+
+        dfile.InsertPermission({
+            'type': 'anyone',
+            'value': 'anyone',
+            'role': 'reader'
+        })
+
+        link = dfile['alternateLink']
+
+        return link

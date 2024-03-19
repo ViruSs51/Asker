@@ -4,6 +4,7 @@ import Module.Bot.filters as f
 import Module.MultyType.ConfigType as ConfigType
 
 import Module.FileControl.FileManage as fm
+import Module.FileControl.GoogleDrive.GoogleDriveManage as gd
 
 import asyncio
 from dataclasses import asdict
@@ -18,6 +19,7 @@ class MainBot:
                  ) -> None:
         self.loadData()
         
+        self.drive = gd.Drive()
         self.bot = Bot(self.bot_data.token)
 
     def loadData(self
@@ -43,7 +45,7 @@ class AskerBot(MainBot):
     def __init__(self
                  ) -> None:
         super().__init__()
-        self.bot_control = BotControl.Answer(bot=self.bot)
+        self.bot_control = BotControl.Answer(bot=self.bot, drive=self.drive)
         self.register()
 
         print('Bot started!')
@@ -94,6 +96,7 @@ class AskerBot(MainBot):
         self.dp.message(f.GetAskAsk())(self.bot_control.get_askask)
         self.dp.message(f.DeleteAsk())(self.bot_control.delete_asker)
         self.dp.message(f.GetAsk())(self.bot_control.get_ask)
+        self.dp.message(f.GetAnswer())(self.bot_control.get_answers)
         self.dp.message(f.GetAsks())(self.bot_control.get_asks)
         self.dp.message(f.NewAsk())(self.bot_control.create_asker)
         self.dp.message(f.NewAskName())(self.bot_control.set_asker_name)

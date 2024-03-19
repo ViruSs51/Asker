@@ -3,6 +3,7 @@ from ..Bot import ActionRegister as reg
 from ..Bot import Menu as menu
 from ..Bot import Action as Action
 from ..FileControl import FileManage as fm
+from ..FileControl.GoogleDrive.GoogleDriveManage import Drive
 from ..DataBase import get_db_connection
 
 import asyncio
@@ -10,15 +11,17 @@ from copy import deepcopy
 
 from aiogram import Bot
 from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery
-#from aiogram.enums import ParseMode
+from aiogram.enums import ParseMode
 #from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 class Answer:
 
     def __init__(self,
-                 bot: Bot
+                 bot: Bot,
+                 drive: Drive
                  ) -> None:
         self.bot = bot
+        self.drive = drive
         self.db = get_db_connection()
 
     async def start(self,
@@ -54,6 +57,37 @@ class Answer:
                                 text=f'{lang.welcome.format(username=username)}\n{lang.about}\n\n{lang.help}',
                                 reply_markup=await menu.get_menu(menu='start', user=user_data)
             )
+    
+    async def get_answers(self,
+                          message: Message
+                          ):
+        answrs_data = []
+        asker_keys = self.db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")[0][0].split(',')
+
+        send_message = await message.answer(text="Идет обработка данных...",
+                                            reply_markup=ReplyKeyboardRemove())
+        
+        if asker_keys: 
+            for answer in asker_keys:
+                if answer == '':
+                    asker_keys.remove('')
+            asker_keys = [f"asker_key = '{answer.split(':')[0]}'" for answer in asker_keys]
+
+            answers = self.db.SQL(f"SELECT `ask_id`, `asker_key`, `answer` FROM `answers` WHERE {' OR '.join(asker_keys)}")
+            if answers:
+                for answer in answers:
+                    anw = list(answer)
+                    anw.insert(2, self.db.SQL(f"SELECT `ask` FROM `asks` WHERE `asker_key` = '{answer[1]}' AND `queue` = '{answer[0]}'")[0][0])
+
+                    answrs_data.append(anw)
+
+        file_link = self.drive.create_table_file(file_name='data/users/answers.csv', 
+                                                 file_name_drive=str(message.from_user.id), 
+                                                 column_title=['Последовательность', 'Ключевое слово/фраза', 'Вопрос', 'Ответ'],
+                                                 columns=answrs_data)
+        
+        await self.bot.delete_message(chat_id=send_message.chat.id, message_id=send_message.message_id)
+        await self.bot.send_message(message.chat.id, text=f'[Вот ссылка на таблицу с ответами на ваши опросы.]({file_link})', parse_mode=ParseMode.MARKDOWN)
     
     async def get_asks(self,
                        message: Message):
