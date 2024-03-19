@@ -83,11 +83,14 @@ class Answer:
 
         file_link = self.drive.create_table_file(file_name='data/users/answers.csv', 
                                                  file_name_drive=str(message.from_user.id), 
-                                                 column_title=['Последовательность', 'Ключевое слово/фраза', 'Вопрос', 'Ответ'],
+                                                 column_title=['Номер вопроса', 'Ключевое слово/фраза', 'Вопрос', 'Ответ'],
                                                  columns=answrs_data)
         
         await self.bot.delete_message(chat_id=send_message.chat.id, message_id=send_message.message_id)
-        await self.bot.send_message(message.chat.id, text=f'[Вот ссылка на таблицу с ответами на ваши опросы.]({file_link})', parse_mode=ParseMode.MARKDOWN)
+        await self.bot.send_message(message.chat.id, 
+                                    text=f'[Вот ссылка на таблицу с ответами на ваши опросы.]({file_link})', 
+                                    parse_mode=ParseMode.MARKDOWN, 
+                                    reply_markup=await menu.get_menu(menu='start', user=message.from_user.id))
     
     async def get_asks(self,
                        message: Message):
@@ -544,7 +547,6 @@ class Answer:
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
         upath.data[str(message.from_user.id)] = 'in-question'
         upath.update()
-
         asker_key = new_text.split('"')[1]
         user_data = message.from_user
     
@@ -606,9 +608,36 @@ class Answer:
                                    ask_id=user_answer[0],
                                    asker_key=user_answer[1])
             
-            await self.bot.send_message(chat_id=user_data.id,
-                                        text=lang.confirm_ask,
-                                        reply_markup=await menu.get_confirmed_ask(user=user_data))    
+            if type(message) == Message:
+                await self.bot.send_message(chat_id=user_data.id,
+                                            text=lang.confirm_ask,
+                                            reply_markup=await menu.get_confirmed_ask(user=user_data))
+            elif type(message) == CallbackQuery:
+                ask_data = await Action.get_ask(asker_key=user_answer[1],
+                                                ask_queue=user_answer[0]+1)
+                
+                if not ask_data:
+                    upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+                    upath.data[str(message.from_user.id)] = f'user-cabinet'
+                    upath.update()
+
+                    await self.bot.send_message(chat_id=message.message.chat.id,
+                                                           text=lang.finished_question,
+                                                           reply_markup=await menu.get_menu(menu='start', user=user_data))
+
+                else:
+                    keyboard = await menu.get_ask_keyboard(ask_data=ask_data)
+
+                    if not keyboard:
+                        keyboard = await menu.get_exit_button()
+
+                    await self.bot.send_message(chat_id=message.message.chat.id,
+                                                               text=ask_data[0][1],
+                                                               reply_markup=keyboard)
+
+                    await Action.add_user_answer_template(user_id=user_data.id, 
+                                                          ask_data=ask_data, 
+                                                          asker_key=user_answer[1])
 
             if type(message) == CallbackQuery:
                 await message.answer() 
