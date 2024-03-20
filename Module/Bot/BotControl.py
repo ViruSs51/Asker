@@ -271,7 +271,7 @@ class Answer:
             upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}/create-answer'
             upath.update()
             await self.bot.send_message(chat_id=message.from_user.id,
-                                        text="Напишите ваши варианты ответов, разделенные через запятую (,):",
+                                        text="Напишите ваши варианты ответов, разделенные через данный знак в скобках (#):",
                                         reply_markup=await menu.get_exit_button())
         
         else:
@@ -609,12 +609,13 @@ class Answer:
                                             text=lang.confirm_ask,
                                             reply_markup=await menu.get_confirmed_ask(user=user_data))
             elif type(message) == CallbackQuery:
-                await self.confirmed_answer(callback=message)
+                await self.confirmed_answer(callback=message, delete_message=False)
 
                 await message.answer()
     
     async def confirmed_answer(self,
-                               callback: CallbackQuery
+                               callback: CallbackQuery,
+                               delete_message: bool=True
                                ) -> None:
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
         upath.data[str(callback.from_user.id)] = 'in-question'
@@ -625,7 +626,7 @@ class Answer:
         user_data = callback.from_user
         lang = await Action.get_language(user=user_data)
 
-        await self.bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+        if delete_message: await self.bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
         
         user_answers = await Action.get_user_answers(user_id=user_data.id)
 

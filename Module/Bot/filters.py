@@ -50,7 +50,7 @@ class UserKeyboardAnswer(Filter):
                         
                         callback_split = callback.data.split(':')
 
-                        if callback_split[0] == 'UserAnswer' and len(callback_split) >= 2 and callback_split[1] in ask_data[0][3].split(','):
+                        if callback_split[0] == 'UserAnswer' and len(callback_split) >= 2 and callback_split[1] in ask_data[0][3].split('#'):
                             return True
 
         return False

@@ -74,7 +74,7 @@ async def get_ask_keyboard(ask_data: list[tuple]
     if ask_data[0][2] == 'note':
         keyboard = []
         
-        for answer in ask_data[0][3].split(','):
+        for answer in ask_data[0][3].split('#'):
             keyboard.append([InlineKeyboardButton(
                     text=answer,
                     callback_data=f'UserAnswer:{answer}',
@@ -124,7 +124,7 @@ async def get_menu_myasks(user_data: user.User) -> ReplyKeyboardMarkup|None:
 
     return keyboard
 
-async def get_menu_myask(asker_key:str) -> ReplyKeyboardMarkup|None:
+async def get_menu_myask(asker_key: str) -> ReplyKeyboardMarkup|None:
     db = get_db_connection()
     asks = db.SQL(f"SELECT `ask` FROM `asks` WHERE `asker_key` = '{asker_key}'")
 
