@@ -323,12 +323,18 @@ class Answer:
                              reply_markup=await menu.get_exit_button())
     
     async def set_asker_name(self, message: Message):
-        new_text = message.text.replace("'", "''")
-        text = ''.join(new_text.split('/'))
+        text = message.text.replace("'", "''")
+        #text = ''.join(new_text.split('/'))
         exist_key = self.db.SQL(f"SELECT `id` FROM `users` WHERE `asker_key` LIKE '%{',' + text + ':ru'}%'")
 
         if exist_key:
             await message.answer(text="Данное ключевое слово/фраза уже существует!\nПожалуйста, введите другое:",
+                             reply_markup=await menu.get_exit_button())
+            
+            return
+        
+        elif ',' in text or '/' in text:
+            await message.answer(text="В ключевых словах/фразах нельзя использовать запятые (,) и косую черту (/).\nПожалуйста, введите друго имя для вашего опроса:",
                              reply_markup=await menu.get_exit_button())
             
             return
