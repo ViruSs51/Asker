@@ -120,7 +120,7 @@ class UserConfirmed(Filter):
             user_answers = await Action.get_user_answers(user_id=callback.from_user.id)
 
             if user_answers:
-                return await Action.get_answer_from_list(list=user_answers)
+                return True#await Action.get_answer_from_list(list=user_answers)
                     
         return False
     
@@ -428,7 +428,7 @@ class EditAskAskText(Filter):
             db = get_db_connection()
             asker_keys = db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
 
-            if message.text == 'Редактировать' and asker_keys and len(split_path) == 4 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
+            if message.text == 'Редактировать текст' and asker_keys and len(split_path) == 4 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
                 queue_ask = db.SQL(f"SELECT `queue` FROM `asks` WHERE `asker_key` = '{split_path[2]}' AND `ask` = '{split_path[3]}'")
 
                 if queue_ask:

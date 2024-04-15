@@ -26,12 +26,13 @@ async def get_menu(menu: str,
                     [
                         KeyboardButton(text='Ответы')
                     ],
+                    [
+                        KeyboardButton(text='Служба поддержки'),
+                        KeyboardButton(text='⬅️')
+                    ],
                     #[
                     #    KeyboardButton(text='Настройки')
                     #],
-                    [
-                        KeyboardButton(text='⬅️')
-                    ]
                 ],
                 resize_keyboard=True,
             )
@@ -41,6 +42,9 @@ async def get_menu(menu: str,
                     [
                         KeyboardButton(text=lang.button_start_menu_login),
                         KeyboardButton(text=lang.button_start_menu_signup)
+                    ],
+                    [
+                        KeyboardButton(text='Служба поддержки')
                     ]
                 ],
                 resize_keyboard=True,
@@ -52,19 +56,42 @@ async def get_menu(menu: str,
 
     return keyboard
 
-async def get_confirmed_ask(user: user.User
+async def get_confirmed_ask(user: user.User,
+                            asker_key: str
                             ) -> InlineKeyboardMarkup:
     lang = await Action.get_language(user=user)
+    db = get_db_connection()
+    ask_len = len(db.SQL(sql_command=f"SELECT queue, ask, type, answers FROM asks WHERE asker_key='{asker_key}'"))
 
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
+    keyboard = [
             [
                 InlineKeyboardButton(text=lang.confirm_ask_button_continue,
                                      callback_data='answer-confirmed'),
-                InlineKeyboardButton(text=lang.confirm_ask_button_edit,
-                                     callback_data='answer-no-confirmed')
-            ]
+                #InlineKeyboardButton(text=lang.confirm_ask_button_edit,
+                #                     callback_data='answer-no-confirmed')
+            ]  
         ]
+    row = 2
+    for answer in range(ask_len):
+        while len(keyboard) < row: keyboard.append([])
+        if len(keyboard[row-1]) <= 5:
+            keyboard[row-1].append(InlineKeyboardButton(
+                    text=str(answer+1),
+                    callback_data=f'UserAnswer:{answer}',  
+            ))
+        
+        else:
+            row += 1
+            keyboard.append([])
+            keyboard[row-1].append(InlineKeyboardButton(
+                    text=str(answer+1),
+                    callback_data=f'UserAnswer:{answer}',  
+            ))
+        
+
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=keyboard
     )
     
     return keyboard
@@ -73,13 +100,77 @@ async def get_ask_keyboard(ask_data: list[tuple]
                            ) -> InlineKeyboardMarkup|None:
     if ask_data[0][2] == 'note':
         keyboard = []
-        
+
+        row = 1
         for answer in ask_data[0][3].split('#'):
-            keyboard.append([InlineKeyboardButton(
-                    text=answer,
-                    callback_data=f'UserAnswer:{answer}',
-                    
-            )])
+            while len(keyboard) < row: keyboard.append([])
+
+            if len(answer) <= 1:
+                if len(keyboard[row-1]) <= 5:
+                    keyboard[row-1].append(InlineKeyboardButton(
+                            text=answer,
+                            callback_data=f'UserAnswer:{answer}',  
+                    ))
+                
+                else:
+                    row += 1
+                    keyboard.append([])
+                    keyboard[row-1].append(InlineKeyboardButton(
+                            text=answer,
+                            callback_data=f'UserAnswer:{answer}',  
+                    ))
+
+            elif len(answer) <= 2:
+                if len(keyboard[row-1]) <= 4:
+                    keyboard[row-1].append(InlineKeyboardButton(
+                            text=answer,
+                            callback_data=f'UserAnswer:{answer}',  
+                    ))
+                
+                else:
+                    row += 1
+                    keyboard.append([])
+                    keyboard[row-1].append(InlineKeyboardButton(
+                            text=answer,
+                            callback_data=f'UserAnswer:{answer}',  
+                    ))
+            elif len(answer) <= 4:
+                if len(keyboard[row-1]) <= 3:
+                    keyboard[row-1].append(InlineKeyboardButton(
+                            text=answer,
+                            callback_data=f'UserAnswer:{answer}',  
+                    ))
+                
+                else:
+                    row += 1
+                    keyboard.append([])
+                    keyboard[row-1].append(InlineKeyboardButton(
+                            text=answer,
+                            callback_data=f'UserAnswer:{answer}',  
+                    ))
+            
+            elif len(answer) <= 6:
+                if len(keyboard[row-1]) <= 2:
+                    keyboard[row-1].append(InlineKeyboardButton(
+                            text=answer,
+                            callback_data=f'UserAnswer:{answer}',  
+                    ))
+                
+                else:
+                    row += 1
+                    keyboard.append([])
+                    keyboard[row-1].append(InlineKeyboardButton(
+                            text=answer,
+                            callback_data=f'UserAnswer:{answer}',  
+                    ))
+            
+            elif len(answer) > 6:
+                row += 1
+                keyboard.append([])
+                keyboard[row-1].append(InlineKeyboardButton(
+                        text=answer,
+                        callback_data=f'UserAnswer:{answer}',  
+                ))
 
         return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
@@ -132,9 +223,12 @@ async def get_menu_myask(asker_key: str) -> ReplyKeyboardMarkup|None:
         keyboard=[
             [
                 KeyboardButton(text='Новый вопрос'),
-                KeyboardButton(text='🚫Удалить опрос🚫')
+                KeyboardButton(text='Изменить названия')
             ],
-            [KeyboardButton(text='⬅️')]
+            [
+                KeyboardButton(text='🚫Удалить опрос🚫'),
+                KeyboardButton(text='⬅️')
+            ]
         ] + ([
             [KeyboardButton(text=button[0])]
             for button in asks
@@ -145,14 +239,24 @@ async def get_menu_myask(asker_key: str) -> ReplyKeyboardMarkup|None:
     return keyboard
 
 async def get_menu_myaskask() -> ReplyKeyboardMarkup|None:
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=[
+    kb = [
             [
-                KeyboardButton(text='Редактировать'),
-                KeyboardButton(text='🚫Удалить вопрос🚫')
+                KeyboardButton(text='Редактировать текст')
             ],
-            [KeyboardButton(text='⬅️')]
-        ],
+            [            
+                KeyboardButton(text='Редактировать ответы')
+            ],
+            [
+                KeyboardButton(text='Редактировать последовательность')
+            ],
+            [
+                KeyboardButton(text='🚫Удалить вопрос🚫'),
+                KeyboardButton(text='⬅️')
+            ]
+        ]
+
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=kb,
         resize_keyboard=True
     )
 
