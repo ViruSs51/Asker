@@ -19,7 +19,7 @@ class MainBot:
                  ) -> None:
         self.loadData()
         
-        self.drive = gd.Drive()
+        self.drive = None #gd.Drive() #Temporar oprit
         self.bot = Bot(self.bot_data.token)
 
     def loadData(self
@@ -52,6 +52,10 @@ class AskerBot(MainBot):
 
     def register(self
                  ) -> None:
+        #Help
+        self.dp.message(f.ExitHelp())(self.bot_control.start)
+        self.dp.message(f.GetHelper())(self.bot_control.get_helper)
+        self.dp.message(F.text.lower() == 'помощь')(self.bot_control.get_help)
 
         #Callback user asks
         self.dp.callback_query((f.SetAskType()))(self.bot_control.set_type_ask)
@@ -79,7 +83,7 @@ class AskerBot(MainBot):
         self.dp.message(f.UserExitSignin())(self.bot_control.exit_signin)
         self.dp.message(f.UserCreateName())(self.bot_control.signin_create_name)
         self.dp.message(f.UserCreatePassword())(self.bot_control.signin_create_password)
-        self.dp.message(F.text.lower() == 'зарегистрироваться')(self.bot_control.signin_start)
+        self.dp.message(F.text.lower() == 'получить такой же опрос')(self.bot_control.signin_start)
 
         #User asks
         self.dp.message(f.ExitEditAskAskText())(self.bot_control.exit_edit_askask_text)
@@ -88,13 +92,29 @@ class AskerBot(MainBot):
         self.dp.message(f.ExitAsk())(self.bot_control.get_asks)
         self.dp.message(f.ExitAsks())(self.bot_control.exit_asks)
         self.dp.message(f.DeleteAskAsk())(self.bot_control.delete_askask)
+
+        self.dp.message(f.ExitEditAsk())(self.bot_control.exit_edit_ask)
+        self.dp.message(f.SetNewAnswers2())(self.bot_control.set_newanswers2)
+        self.dp.message(f.EditAnswers())(self.bot_control.edit_answers)
+
+
+        self.dp.message(f.SetNewAnswers())(self.bot_control.set_new_answers)
+        self.dp.callback_query((f.SetNewAskType()))(self.bot_control.set_new_answer_type)
+        self.dp.callback_query((f.ExitEditAskType()))(self.bot_control.exit_edit_ask_type)
+        self.dp.message(f.EditAnswerType())(self.bot_control.edit_answer_type)
         self.dp.message(f.SetEditAskAskText())(self.bot_control.set_edit_askask_text)
         self.dp.message(f.EditAskAskText())(self.bot_control.edit_askask_text)
+
         self.dp.message(f.SetAskAnswer())(self.bot_control.set_ask_answer)
         self.dp.message(f.SetAskText())(self.bot_control.set_ask_text)
         self.dp.message(f.CreateAsk())(self.bot_control.create_ask)
         self.dp.message(f.GetAskAsk())(self.bot_control.get_askask)
-        self.dp.message(f.DeleteAsk())(self.bot_control.delete_asker)
+        self.dp.message(f.ExitChageAskerName())(self.bot_control.exit_chage_asker_name)
+        self.dp.message(f.SetNewAskerName())(self.bot_control.set_new_asker_name)
+        self.dp.message(f.ChageAskerName())(self.bot_control.chage_asker_name)
+        self.dp.callback_query(f.NoDeleteAsker())(self.bot_control.no_delete_asker)
+        self.dp.callback_query(f.DeleteAsker())(self.bot_control.delete_asker)
+        self.dp.message(f.ConfirmDeleteAsk())(self.bot_control.confirm_delete_asker_ask)
         self.dp.message(f.GetAsk())(self.bot_control.get_ask)
         self.dp.message(f.GetAnswer())(self.bot_control.get_answers)
         self.dp.message(f.GetAsks())(self.bot_control.get_asks)

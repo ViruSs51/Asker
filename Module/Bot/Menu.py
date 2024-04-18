@@ -27,7 +27,7 @@ async def get_menu(menu: str,
                         KeyboardButton(text='Ответы')
                     ],
                     [
-                        KeyboardButton(text='Служба поддержки'),
+                        KeyboardButton(text='Помощь'),
                         KeyboardButton(text='⬅️')
                     ],
                     #[
@@ -44,7 +44,7 @@ async def get_menu(menu: str,
                         KeyboardButton(text=lang.button_start_menu_signup)
                     ],
                     [
-                        KeyboardButton(text='Служба поддержки')
+                        KeyboardButton(text='Помощь')
                     ]
                 ],
                 resize_keyboard=True,
@@ -238,10 +238,31 @@ async def get_menu_myask(asker_key: str) -> ReplyKeyboardMarkup|None:
 
     return keyboard
 
+async def get_confirm_delete_asker() -> InlineKeyboardMarkup|None:
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text='Удалить',
+                callback_data='DeleteAsker:yes',
+                )
+        ],
+        [
+            InlineKeyboardButton(
+                text='Не удалять',
+                callback_data='DeleteAsker:no',
+                )
+        ]
+    ]
+        
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
 async def get_menu_myaskask() -> ReplyKeyboardMarkup|None:
     kb = [
             [
                 KeyboardButton(text='Редактировать текст')
+            ],
+            [            
+                KeyboardButton(text='Редактировать формат ответов')
             ],
             [            
                 KeyboardButton(text='Редактировать ответы')
@@ -250,7 +271,9 @@ async def get_menu_myaskask() -> ReplyKeyboardMarkup|None:
                 KeyboardButton(text='Редактировать последовательность')
             ],
             [
-                KeyboardButton(text='🚫Удалить вопрос🚫'),
+                KeyboardButton(text='🚫Удалить вопрос🚫')
+            ],
+            [
                 KeyboardButton(text='⬅️')
             ]
         ]
@@ -285,3 +308,16 @@ async def get_ask_type() -> InlineKeyboardMarkup|None:
     ]
         
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+async def help_menu() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text='Связаться с службой поддержки')
+            ],
+            [
+                KeyboardButton(text='⬅️')
+            ]
+        ],
+        resize_keyboard=True
+    )
