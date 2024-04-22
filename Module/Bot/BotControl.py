@@ -55,7 +55,7 @@ class Answer:
             upath.update()
 
             await message.answer(
-                                text=f'{lang.welcome.format(username=username)}\n{lang.about}\n\n{lang.help}',
+                                text=f'{lang.p1.format(username=username)}\n{lang.p2}\n\n{lang.p3}',
                                 reply_markup=await menu.get_menu(menu='start', user=user_data)
             )
 
@@ -885,7 +885,7 @@ class Answer:
             
             if type(message) == Message:
                 #await self.bot.send_message(chat_id=user_data.id,
-                #                            text=lang.confirm_ask,
+                #                            text=lang.p6,
                 #                            reply_markup=await menu.get_confirmed_ask(user=user_data))
                 await self.confirmed_answer(callback=message, delete_message=False, cb=False, verify=False)
 
@@ -943,7 +943,7 @@ class Answer:
                     upath.update()
                 
                     await self.bot.send_message(chat_id=message.chat.id,
-                                                           text=lang.finished_question,
+                                                           text=lang.p7,
                                                            reply_markup=await menu.get_menu(menu='start', user=user_data))
                     await self.bot.delete_message(chat_id=message.chat.id, 
                                                   message_id=message.chat.id)
@@ -1003,7 +1003,7 @@ class Answer:
                 keyboard = await menu.get_ask_keyboard(ask_data=ask_data)
    
             await self.bot.send_message(chat_id=message.chat.id,
-                                                text=lang.message_for_edit,
+                                                text=lang.p6,
                                                 reply_markup=keyboard)
 
             await callback.answer()

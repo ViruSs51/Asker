@@ -2,20 +2,21 @@ from ..MultyType import LangType
 
 __languages = {
     'ru': LangType.Language(
-        welcome='Добро пожаловать, {username}!',
-        about='Тут вы можете пройти какой-либо опрос, или же создать свой персональный опрос, а потом отправить его другим.',
-        help='Чтобы пройти опрос, перешлите пригласительное сообщение, которое вам прислали вместе с ссылкой на данный бот.',
-        button_start_menu_login='Войти в аккаунт',
-        button_start_menu_signup='Получить такой же опрос',
-        description_start_menu='Зарегистрируйтесь или войдите в аккаунт!',
-        confirm_ask='Подтвердите ответ:',
-        confirm_ask_button_continue='Продолжить',
-        confirm_ask_button_edit='Редактировать ответ',
-        message_for_edit='Отправьте новый ответ на вопрос выше в замен предыдущему:',
-        finished_question='Поздравляю! Вы прошли данный опрос!\nЧтобы получить такой же опрос нажмите на кнопку ниже "Получить такой же опрос"'
-    ),
+        p1='Добро пожаловать, {username}!',
+        p2='Тут вы можете пройти какой-либо опрос, или же создать свой персональный опрос, а потом отправить его другим.',
+        p3='Чтобы пройти опрос, перешлите пригласительное сообщение, которое вам прислали вместе с ссылкой на данный бот.',
+        b1='Войти в аккаунт',
+        b2='Получить такой же опрос',
+        p4='Зарегистрируйтесь или войдите в аккаунт!',
+        p5='Подтвердите ответ:',
+        b3='Продолжить',
+        b4='Редактировать ответ',
+        p6='Отправьте новый ответ на вопрос выше в замен предыдущему:',
+        p7='Поздравляю! Вы прошли данный опрос!\nЧтобы получить такой же опрос нажмите на кнопку ниже "Получить такой же опрос"'
+    )}
+''',
     'en': LangType.Language(
-        welcome='Welcome, {username}!',
+        p1='Welcome, {username}!',
         about='Here you can take any survey, or create your own personal survey, and then send it to others.',
         help='To take a survey, forward the invitation message sent to you along with a link to this bot.',
         button_start_menu_login='Log in to account',
@@ -28,7 +29,7 @@ __languages = {
         finished_question='Congratulations! You have completed this survey!'
     ),
     'ro': LangType.Language(
-        welcome='Bun venit, {username}!',
+        p1='Bun venit, {username}!',
         about='Aici poți lua orice sondaj sau crea propriul tău sondaj personal și apoi să-l trimiți altora.',
         help='Pentru a lua un sondaj, trimiteți mesajul de invitație trimis vouă împreună cu un link către acest bot.',
         button_start_menu_login='Conectați-vă la cont',
@@ -41,6 +42,7 @@ __languages = {
         finished_question='Felicitări! Ai completat acest sondaj!'
     )
 }
+    '''
 
 async def get_lang(lang: str='ru'
              ) -> LangType.Language:

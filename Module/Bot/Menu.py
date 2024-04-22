@@ -40,15 +40,15 @@ async def get_menu(menu: str,
             keyboard = ReplyKeyboardMarkup(
                 keyboard=[
                     [
-                        KeyboardButton(text=lang.button_start_menu_login),
-                        KeyboardButton(text=lang.button_start_menu_signup)
+                        KeyboardButton(text=lang.b1),
+                        KeyboardButton(text=lang.b2)
                     ],
                     [
                         KeyboardButton(text='Помощь')
                     ]
                 ],
                 resize_keyboard=True,
-                input_field_placeholder=lang.description_start_menu
+                input_field_placeholder=lang.p4
             )
 
     else:
@@ -65,9 +65,9 @@ async def get_confirmed_ask(user: user.User,
 
     keyboard = [
             [
-                InlineKeyboardButton(text=lang.confirm_ask_button_continue,
+                InlineKeyboardButton(text=lang.b3,
                                      callback_data='answer-confirmed'),
-                #InlineKeyboardButton(text=lang.confirm_ask_button_edit,
+                #InlineKeyboardButton(text=lang.b4,
                 #                     callback_data='answer-no-confirmed')
             ]  
         ]

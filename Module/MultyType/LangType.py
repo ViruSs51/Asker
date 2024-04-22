@@ -2,14 +2,14 @@ from dataclasses import dataclass
 
 @dataclass
 class Language:
-    welcome: str
-    about: str
-    help: str
-    button_start_menu_login: str
-    button_start_menu_signup: str
-    description_start_menu: str
-    confirm_ask: str
-    confirm_ask_button_continue: str
-    confirm_ask_button_edit: str
-    message_for_edit: str
-    finished_question: str
+    p1: str
+    p2: str
+    p3: str
+    b1: str
+    b2: str
+    p4: str
+    p5: str
+    b3: str
+    b4: str
+    p6: str
+    p7: str
