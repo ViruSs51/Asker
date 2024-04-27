@@ -85,7 +85,6 @@ class Answer:
     async def get_answers(self,
                           message: Message
                           ):
-        return #Temporar oprit
         answrs_data = []
         asker_keys = self.db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")[0][0].split(',')
 

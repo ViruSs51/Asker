@@ -19,7 +19,7 @@ class MainBot:
                  ) -> None:
         self.loadData()
         
-        self.drive = None #gd.Drive() #Temporar oprit
+        self.drive = gd.Drive() #Temporar oprit
         self.bot = Bot(self.bot_data.token)
 
     def loadData(self
