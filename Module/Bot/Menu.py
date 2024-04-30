@@ -21,13 +21,13 @@ async def get_menu(menu: str,
             keyboard = ReplyKeyboardMarkup(
                 keyboard=[
                     [
-                        KeyboardButton(text='Мой опросы')
+                        KeyboardButton(text = lang.b6)
                     ],
                     [
-                        KeyboardButton(text='Ответы')
+                        KeyboardButton(text = lang.b7)
                     ],
                     [
-                        KeyboardButton(text='Помощь'),
+                        KeyboardButton(text = lang.b8),
                         KeyboardButton(text='⬅️')
                     ],
                     #[
@@ -40,11 +40,11 @@ async def get_menu(menu: str,
             keyboard = ReplyKeyboardMarkup(
                 keyboard=[
                     [
-                        KeyboardButton(text=lang.b1),
-                        KeyboardButton(text=lang.b2)
+                        KeyboardButton(text = lang.b1),
+                        KeyboardButton(text = lang.b2)
                     ],
                     [
-                        KeyboardButton(text='Помощь')
+                        KeyboardButton(text = lang.b8)
                     ]
                 ],
                 resize_keyboard=True,
@@ -59,15 +59,17 @@ async def get_menu(menu: str,
 async def get_confirmed_ask(user: user.User,
                             asker_key: str
                             ) -> InlineKeyboardMarkup:
+    
     lang = await Action.get_language(user=user)
+    
     db = get_db_connection()
     ask_len = len(db.SQL(sql_command=f"SELECT queue, ask, type, answers FROM asks WHERE asker_key='{asker_key}'"))
 
     keyboard = [
             [
-                InlineKeyboardButton(text=lang.b3,
+                InlineKeyboardButton(text = lang.b3,
                                      callback_data='answer-confirmed'),
-                #InlineKeyboardButton(text=lang.b4,
+                #InlineKeyboardButton(text = lang.b4,
                 #                     callback_data='answer-no-confirmed')
             ]  
         ]
@@ -191,9 +193,11 @@ async def get_exit_button(
 
     return keyboard
 
-async def get_menu_myasks(user_data: user.User) -> ReplyKeyboardMarkup|None:
+async def get_menu_myasks(user_data: user.User) -> ReplyKeyboardMarkup|None:#Deadp47
     db = get_db_connection()
     connected_id = db.SQL(f"SELECT `connected_id`, `username` FROM `users`")
+
+    lang = await Action.get_language(user = user_data)
 
     connected_username = None
     for connect in connected_id:
@@ -203,7 +207,7 @@ async def get_menu_myasks(user_data: user.User) -> ReplyKeyboardMarkup|None:
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text='Новый опрос'),
+                KeyboardButton(text = lang.b9),
                 KeyboardButton(text='⬅️')
             ]
         ] + [
@@ -215,18 +219,20 @@ async def get_menu_myasks(user_data: user.User) -> ReplyKeyboardMarkup|None:
 
     return keyboard
 
-async def get_menu_myask(asker_key: str) -> ReplyKeyboardMarkup|None:
+async def get_menu_myask(asker_key: str, user: user.User) -> ReplyKeyboardMarkup|None:#Deadp47
     db = get_db_connection()
     asks = db.SQL(f"SELECT `ask` FROM `asks` WHERE `asker_key` = '{asker_key}'")
+
+    lang = await Action.get_language(user = user)
 
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text='Новый вопрос'),
-                KeyboardButton(text='Изменить названия')
+                KeyboardButton(text = lang.b16),
+                KeyboardButton(text = lang.b10)
             ],
             [
-                KeyboardButton(text='🚫Удалить опрос🚫'),
+                KeyboardButton(text = lang.b11),
                 KeyboardButton(text='⬅️')
             ]
         ] + ([
@@ -238,17 +244,20 @@ async def get_menu_myask(asker_key: str) -> ReplyKeyboardMarkup|None:
 
     return keyboard
 
-async def get_confirm_delete_asker() -> InlineKeyboardMarkup|None:
+async def get_confirm_delete_asker(user: user.User) -> InlineKeyboardMarkup|None:#Deadp47
+
+    lang = await Action.get_language(user = user)
+
     keyboard = [
         [
             InlineKeyboardButton(
-                text='Удалить',
+                text = lang.b18,
                 callback_data='DeleteAsker:yes',
                 )
         ],
         [
             InlineKeyboardButton(
-                text='Не удалять',
+                text = lang.b19,
                 callback_data='DeleteAsker:no',
                 )
         ]
@@ -256,22 +265,25 @@ async def get_confirm_delete_asker() -> InlineKeyboardMarkup|None:
         
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
-async def get_menu_myaskask() -> ReplyKeyboardMarkup|None:
+async def get_menu_myaskask(user: user.User) -> ReplyKeyboardMarkup|None:#Deadp47
+    
+    lang = await Action.get_language(user = user)
+
     kb = [
             [
-                KeyboardButton(text='Редактировать текст')
+                KeyboardButton(text = lang.b12)
             ],
             [            
-                KeyboardButton(text='Редактировать формат ответов')
+                KeyboardButton(text = lang.b13)
             ],
             [            
-                KeyboardButton(text='Редактировать ответы')
+                KeyboardButton(text = lang.b14)
             ],
             [
-                KeyboardButton(text='Редактировать последовательность')
+                KeyboardButton(text = lang.b23)
             ],
             [
-                KeyboardButton(text='🚫Удалить вопрос🚫')
+                KeyboardButton(text = lang.b15)
             ],
             [
                 KeyboardButton(text='⬅️')
@@ -285,17 +297,20 @@ async def get_menu_myaskask() -> ReplyKeyboardMarkup|None:
 
     return keyboard
 
-async def get_ask_type() -> InlineKeyboardMarkup|None:
+async def get_ask_type(user: user.User) -> InlineKeyboardMarkup|None:#Deadp47
+    
+    lang = await Action.get_language(user = user)
+
     keyboard = [
         [
             InlineKeyboardButton(
-                text='Текст',
+                text = lang.b21,
                 callback_data='SetNewAskType:text',
                 )
         ],
         [
             InlineKeyboardButton(
-                text='Кнопки',
+                text = lang.b22,
                 callback_data='SetNewAskType:note',
                 )
         ],
@@ -309,11 +324,14 @@ async def get_ask_type() -> InlineKeyboardMarkup|None:
         
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
-async def help_menu() -> ReplyKeyboardMarkup:
+async def help_menu(user: user.User) -> ReplyKeyboardMarkup:#Deadp47
+    
+    lang = await Action.get_language(user = user)
+
     return ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text='Связаться с службой поддержки')
+                KeyboardButton(text = lang.b17)
             ],
             [
                 KeyboardButton(text='⬅️')
