@@ -108,13 +108,14 @@ class Answer:
                         answrs_data.append(anw)
 
         file_link = self.drive.create_table_file(file_name='data/users/answers.csv', 
-                                                 file_name_drive=str(message.from_user.id), 
-                                                 column_title=['Номер вопроса', 'Ключевое слово/фраза', 'Вопрос', 'Ответ'],
+                                                 file_name_drive=str(message.from_user.id), #Deadp47
+                                                 column_title=[lang.p11_a, lang.p11_b, lang.p11_c, lang.p11_d],
                                                  columns=answrs_data)
         
         await self.bot.delete_message(chat_id=send_message.chat.id, message_id=send_message.message_id)
         await self.bot.send_message(message.chat.id, 
-                                    lang.p12, 
+                                    text = lang.p12.format(file_link=file_link), 
+                                    #text = f'[Вот ссылка на таблицу с ответами на ваши опросы.]({file_link})',
                                     parse_mode=ParseMode.MARKDOWN, 
                                     reply_markup=await menu.get_menu(menu='start', user=message.from_user))
     
@@ -216,10 +217,9 @@ class Answer:
             upath.update()
 
             ask = self.db.SQL(f"SELECT `ask` FROM `asks` WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
-            await self.bot.send_message(#lang.p21,
-                                        chat_id=callback.from_user.id,
+            await self.bot.send_message(chat_id=callback.from_user.id,
                                         #text = "Вы изменили тип ответа на данный вопрос:\n*\"{ask[0][0]}\"*\n\nТеперь тип ответа на вопроса будет в виде текста",
-                                        text = lang.p21,
+                                        text = lang.p21.format(ask = ask[0][0]),
                                         reply_markup=await menu.get_menu_myaskask(user=callback.from_user),
                                         parse_mode=ParseMode.MARKDOWN)
         
@@ -271,7 +271,7 @@ class Answer:
 
         lang = await Action.get_language(user=message.from_user)
 
-        await message.answer(lang.p24,
+        await message.answer(lang.p24.format(ask = ask[0][0]),
                              reply_markup=await menu.get_menu_myaskask(user=message.from_user),
                              parse_mode=ParseMode.MARKDOWN)
         
@@ -301,9 +301,11 @@ class Answer:
         upath.data[str(message.from_user.id)] = '/'.join(split_path[:4])
         upath.update()
 
+        lang = await Action.get_language(user=message.from_user)
+
         await message.answer(
                             #Deadp47
-                             text=f"Вы изменили ответы на данный вопрос:\n*\"{ask[0][0]}\"*\n\nТеперь ответы будут такими:\n" + "\n".join([f'{i+1}. *"{answer}"*'for i, answer in enumerate(message.text.split('#'))]),
+                             text=lang.p53.format(ask=ask[0][0]) + "\n".join([f'{i+1}. *"{answer}"*'for i, answer in enumerate(message.text.split('#'))]),
                              reply_markup=await menu.get_menu_myaskask(user=message.from_user),
                              parse_mode=ParseMode.MARKDOWN)
         
@@ -354,10 +356,9 @@ class Answer:
 
         lang = await Action.get_language(user=message.from_user)
 
-        await self.bot.send_message(#lang.p29,
-                                    chat_id=message.from_user.id,
+        await self.bot.send_message(chat_id=message.from_user.id,
                                     #text = "Вы успешно заменили текст вопроса!\nТеперь он такой:\n*\"{message.text}\"*",
-                                    text = lang.p29,
+                                    text = lang.p29.format(message_text = message.text),
                                     reply_markup=await menu.get_menu_myaskask(user=message.from_user),
                                     parse_mode=ParseMode.MARKDOWN)
         
@@ -454,10 +455,9 @@ class Answer:
             lang = await Action.get_language(user=callback.from_user)
 
             ask = self.db.SQL(f"SELECT `ask` FROM `asks` WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
-            await self.bot.send_message(#lang.p34,
-                                        chat_id=callback.from_user.id,
+            await self.bot.send_message(chat_id=callback.from_user.id,
                                         #text = "Вы создали вопрос:\n*\"{ask[0][0]}\"*\n\nТип ответа на данный вопрос будет в виде текста",
-                                        text = lang.p34,
+                                        text = lang.p34.format(ask = ask[0][0]),
                                         reply_markup=await menu.get_menu_myask(asker_key=split_path[2], user = callback.from_user),
                                         parse_mode=ParseMode.MARKDOWN)
 
@@ -541,7 +541,7 @@ class Answer:
         upath.update()
 
         lang = await Action.get_language(user=message.from_user)
-        await message.answer(lang.p39,
+        await message.answer(lang.p39.format(ask = ask[0][0]),
                              reply_markup=await menu.get_menu_myask(user = message.from_user,asker_key=split_path[2]),
                              parse_mode=ParseMode.MARKDOWN)
         
@@ -676,7 +676,7 @@ class Answer:
                                                   ).message_id
                                       )
         await message.answer(lang.p19,
-                             reply_markup=await menu.get_confirm_delete_asker(),
+                             reply_markup=await menu.get_confirm_delete_asker(message.from_user),
                              parse_mode=ParseMode.MARKDOWN)
     
     async def delete_asker(self,
@@ -785,7 +785,7 @@ class Answer:
         file.data[str(message.from_user.id)]['username'] = new_text
         file.update()
         
-        await message.answer(lang.p49,
+        await message.answer(lang.p49.format(new_text = new_text),
                              reply_markup=await menu.get_exit_button())
     
     async def login_password(self,
@@ -864,7 +864,7 @@ class Answer:
         else:
             self.db.SQL(f"UPDATE `users` SET `username` = '{new_text}' WHERE `user_id` = '{message.from_user.id}' AND `username` = '' ORDER BY id DESC LIMIT 1")
 
-            await message.answer(lang.p27,
+            await message.answer(lang.p27.format(new_text = new_text),
                              reply_markup=await menu.get_exit_button())
 
     async def signin_create_password(self,
@@ -1007,7 +1007,7 @@ class Answer:
 
         user_answer: tuple
         message = callback.message if cb else callback
-        
+
         user_data = callback.from_user
         lang = await Action.get_language(user=user_data)
 

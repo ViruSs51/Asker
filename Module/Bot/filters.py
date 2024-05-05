@@ -19,7 +19,7 @@ class Start(Filter):
 
         if message.text == '/start' and (str(message.from_user.id) not in upath.data or upath.data[str(message.from_user.id)] in ['user-cabinet', '', 'help-menu']):
             return True
-
+        
         return False
     
 class IsAskerKey(Filter):
@@ -144,7 +144,7 @@ class UserExitAsker(Filter):
                        ) -> bool:
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
 
-        if str(message.from_user.id) in upath.data and upath.data[str(message.from_user.id)] == 'in-question' and message.text.lower() == '⬅️':
+        if str(message.from_user.id) in upath.data and upath.data[str(message.from_user.id)] == 'in-question' and message.text == '⬅️':
             db = get_db_connection()
             db.SQL(f"DELETE FROM `answers` WHERE `user_id` = '{message.from_user.id}' AND (`is_answer` = '0' OR `confirmed` = '0')")
 
@@ -185,9 +185,9 @@ class UserCreatePassword(Filter):
 class UserExitSignin(Filter):
 
     async def __call__(self,
-                       message: Message
+                        message: Message
                        ) -> bool:
-        if message.text.lower() == '⬅️':
+        if message.text == '⬅️':
             db = get_db_connection()
             id_rows = db.SQL(f"SELECT `username`, `password` FROM `users` WHERE `user_id` = '{message.from_user.id}'")        
 
@@ -203,7 +203,7 @@ class UserExitLogin(Filter):
     async def __call__(self,
                        message: Message
                        ) -> bool:
-        if message.text.lower() == '⬅️':
+        if message.text == '⬅️':
             file = fm.OpenJson(file_name='Module/Bot/data/login_procces.json')
 
             if str(message.from_user.id) in file.data:
@@ -245,7 +245,7 @@ class UserExitAccount(Filter):
                        ) -> bool:
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
         
-        if str(message.from_user.id) in upath.data and upath.data[str(message.from_user.id)] == 'user-cabinet' and message.text.lower() == '⬅️':
+        if str(message.from_user.id) in upath.data and upath.data[str(message.from_user.id)] == 'user-cabinet' and message.text == '⬅️':#Deadp47
             db = get_db_connection()
             db.SQL(f"DELETE FROM `answers` WHERE `user_id` = '{message.from_user.id}' AND (`is_answer` = '0' OR `confirmed` = '0')")
 
@@ -260,11 +260,13 @@ class GetAnswer(Filter):
                        ) -> bool:
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
 
+        lang = await Action.get_language(user=message.from_user)
+
         if str(message.from_user.id) in upath.data and upath.data[str(message.from_user.id)] == 'user-cabinet':
             db = get_db_connection()
             connected_id = db.SQL(f"SELECT `id` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
 
-            if connected_id and message.text.lower() == 'ответы':
+            if connected_id and message.text == lang.b7:#p78
                 return True
 
         return False
@@ -275,6 +277,8 @@ class GetAsks(Filter):
                        message: Message
                        ) -> bool:
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+
+        lang = await Action.get_language(user=message.from_user)
 
         if str(message.from_user.id) in upath.data and upath.data[str(message.from_user.id)] == 'user-cabinet':
             db = get_db_connection()
@@ -287,7 +291,7 @@ class GetAsks(Filter):
                         connected = True
                         break
                     
-                if connected and message.text.lower() == 'мой опросы':
+                if connected and message.text == lang.b6:#p79
                     return True
 
             return False
@@ -303,7 +307,7 @@ class ExitAsks(Filter):
             db = get_db_connection()
             connected_id = db.SQL(f"SELECT `id` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
 
-            if connected_id and message.text.lower() == '⬅️':
+            if connected_id and message.text == '⬅️':
                 return True
 
         return False
@@ -314,6 +318,8 @@ class NewAsk(Filter):
                        message: Message
                        ) -> bool:
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+
+        lang = await Action.get_language(user=message.from_user)
 
         if str(message.from_user.id) in upath.data and upath.data[str(message.from_user.id)] == 'user-cabinet/question':
             db = get_db_connection()
@@ -326,7 +332,7 @@ class NewAsk(Filter):
                         connected = True
                         break
                     
-                if connected and message.text.lower() == 'новый опрос':
+                if connected and message.text == lang.b9:#p80
                     return True
 
         return False
@@ -358,7 +364,7 @@ class ExitAsk(Filter):
             db = get_db_connection()
             data_connected = db.SQL(f"SELECT `id`, `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
 
-            if message.text.lower() == '⬅️' and data_connected and str(message.from_user.id) in upath.data and (('/'.join(path[:-1]) == 'user-cabinet/question' and path[-1] in data_connected[0][1]) or (upath.data[str(message.from_user.id)] == 'user-cabinet/question/create')):
+            if message.text == '⬅️' and data_connected and str(message.from_user.id) in upath.data and (('/'.join(path[:-1]) == 'user-cabinet/question' and path[-1] in data_connected[0][1]) or (upath.data[str(message.from_user.id)] == 'user-cabinet/question/create')):
                 return True
 
         return False
@@ -385,6 +391,9 @@ class ChageAskerName(Filter):
                        message: Message
                        ) -> bool:
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+
+        lang = await Action.get_language(user=message.from_user)
+
         if str(message.from_user.id) in upath.data:
             split_path = upath.data[str(message.from_user.id)].split('/')
 
@@ -392,7 +401,7 @@ class ChageAskerName(Filter):
             db = get_db_connection()
             asker_keys = db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
 
-            if message.text == 'Изменить названия' and asker_keys and len(split_path) == 3 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
+            if message.text == lang.b10 and asker_keys and len(split_path) == 3 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
                 return True
 
             return False
@@ -437,13 +446,16 @@ class ConfirmDeleteAsk(Filter):
                        message: Message
                        ) -> bool:
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+
+        lang = await Action.get_language(user=message.from_user)
+
         if str(message.from_user.id) in upath.data:
             split_path = upath.data[str(message.from_user.id)].split('/')
 
             db = get_db_connection()
             asker_keys = db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
 
-            if message.text == '🚫Удалить опрос🚫' and asker_keys and len(split_path) == 3 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
+            if message.text == lang.b11 and asker_keys and len(split_path) == 3 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
                 return True
 
             return False
@@ -532,13 +544,16 @@ class EditAnswerType(Filter):
                        message: Message
                        ) -> bool:
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+
+        lang = await Action.get_language(user=message.from_user)
+
         if str(message.from_user.id) in upath.data:
             split_path = upath.data[str(message.from_user.id)].split('/')
 
             db = get_db_connection()
             asker_keys = db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
 
-            if message.text == 'Редактировать формат ответов' and asker_keys and len(split_path) == 4 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
+            if message.text == lang.b13 and asker_keys and len(split_path) == 4 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
                 queue_ask = db.SQL(f"SELECT `queue` FROM `asks` WHERE `asker_key` = '{split_path[2]}' AND `ask` = '{split_path[3]}'")
 
                 if queue_ask:
@@ -552,13 +567,16 @@ class EditAnswers(Filter):
                        message: Message
                        ) -> bool:
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+
+        lang = await Action.get_language(user=message.from_user)
+
         if str(message.from_user.id) in upath.data:
             split_path = upath.data[str(message.from_user.id)].split('/')
 
             db = get_db_connection()
             asker_keys = db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
 
-            if message.text == 'Редактировать ответы' and asker_keys and len(split_path) == 4 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
+            if message.text == lang.b14 and asker_keys and len(split_path) == 4 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
                 queue_ask = db.SQL(f"SELECT `queue` FROM `asks` WHERE `asker_key` = '{split_path[2]}' AND `ask` = '{split_path[3]}'")
 
                 if queue_ask:
@@ -729,13 +747,16 @@ class DeleteAskAsk(Filter):
                        message: Message
                        ) -> bool:
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+
+        lang = await Action.get_language(user=message.from_user)
+
         if str(message.from_user.id) in upath.data:
             split_path = upath.data[str(message.from_user.id)].split('/')
 
             db = get_db_connection()
             asker_keys = db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
 
-            if message.text == '🚫Удалить вопрос🚫' and asker_keys and len(split_path) == 4 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
+            if message.text == lang.b15 and asker_keys and len(split_path) == 4 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
                 queue_ask = db.SQL(f"SELECT `queue` FROM `asks` WHERE `asker_key` = '{split_path[2]}' AND `ask` = '{split_path[3]}'")
 
                 if queue_ask:
@@ -758,7 +779,7 @@ class ExitAskAsk(Filter):
             if asker_keys and len(split_path) == 4 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
                 queue_ask = db.SQL(f"SELECT `queue` FROM `asks` WHERE `asker_key` = '{split_path[2]}' AND `ask` = '{split_path[3]}'")
 
-                if queue_ask and message.text.lower() == '⬅️':
+                if queue_ask and message.text == '⬅️':
                     return True
 
             return False
@@ -768,7 +789,10 @@ class CreateAsk(Filter):
     async def __call__(self,
                        message: Message
                        ) -> bool:
-        if message.text == 'Новый вопрос':
+        
+        lang = await Action.get_language(user=message.from_user)
+
+        if message.text == lang.b16:
             upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
             if str(message.from_user.id) in upath.data:
                 split_path = upath.data[str(message.from_user.id)].split('/')
@@ -829,7 +853,7 @@ class ExitCreateAskText(Filter):
     async def __call__(self,
                        message: Message
                        ) -> bool:
-        if message.text.lower() == '⬅️':
+        if message.text == '⬅️':
             upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
             if str(message.from_user.id) in upath.data:
                 split_path = upath.data[str(message.from_user.id)].split('/')
@@ -886,7 +910,7 @@ class ExitHelp(Filter):
                        ) -> bool:
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
 
-        if str(message.from_user.id) in upath.data and upath.data[str(message.from_user.id)] == 'help-menu' and message.text.lower() == '⬅️':
+        if str(message.from_user.id) in upath.data and upath.data[str(message.from_user.id)] == 'help-menu' and message.text == '⬅️':
             return True
     
         return False
@@ -896,9 +920,12 @@ class GetHelper(Filter):
     async def __call__(self,
                        message: Message
                        ) -> bool:
+        
+        lang = await Action.get_language(user=message.from_user)
+
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
 
-        if str(message.from_user.id) in upath.data and upath.data[str(message.from_user.id)] == 'help-menu' and message.text.lower() == 'связаться с службой поддержки':
+        if str(message.from_user.id) in upath.data and upath.data[str(message.from_user.id)] == 'help-menu' and message.text == lang.b17:#p81
             return True
         
         return False
