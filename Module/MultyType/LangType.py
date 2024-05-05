@@ -17,7 +17,11 @@ class Language:
     p9: str 
     p10: str 
     p11: str 
-    b5: str 
+    #b5: str 
+    p11_a: str
+    p11_b: str
+    p11_c: str
+    p11_d: str
     p12: str 
     p13: str 
     p14: str 
@@ -75,17 +79,6 @@ class Language:
     p75: str
     p76: str
     p77: str
-    
-    p78: str
-    p79: str
-    p80: str
-    p81: str
-    p82: str
-    p83: str 
-    p84: str 
-    p85: str 
-    p86: str 
-    p87: str 
         
     b6: str 
     b7: str 
