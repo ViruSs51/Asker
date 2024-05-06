@@ -44,9 +44,10 @@ class Answer:
         if connected:
             upath.data[str(message.from_user.id)] = 'user-cabinet'
             upath.update()
-
+            #lang = await Action.get_language(user=user_data)
             await message.answer(
-                                text='Приветствую вас снова!\nВыберите, что вы хотите сделать в меню снизу, или пришлите сюда пригласительное сообщение к данному боту, если хотите пройти какой-либо опрос.\n\n*Мой опросы* - Данная кнопка, перешлет вас в меню с ващеми опросами.\n\n*Ответы* - Данная кнопка даст вам ответы каторые другие пользователи дали на все ващи опросы.\n\n*Помощь* - Данная кнопка перенаправит вас в меню с ответами на часто задаваемые вопросы и связью со службой поддержки.\n\n*⬅️* - Данная кнопка обозначает выход с аккаунта.',
+                                #text='Приветствую вас снова!\nВыберите, что вы хотите сделать в меню снизу, или пришлите сюда пригласительное сообщение к данному боту, если хотите пройти какой-либо опрос.\n\n*Мой опросы* - Данная кнопка, перешлет вас в меню с ващеми опросами.\n\n*Ответы* - Данная кнопка даст вам ответы каторые другие пользователи дали на все ващи опросы.\n\n*Помощь* - Данная кнопка перенаправит вас в меню с ответами на часто задаваемые вопросы и связью со службой поддержки.\n\n*⬅️* - Данная кнопка обозначает выход с аккаунта.',
+                                lang.p8,
                                 reply_markup=await menu.get_menu(menu='start', user=user_data),
                                 parse_mode=ParseMode.MARKDOWN
             )
@@ -67,18 +68,21 @@ class Answer:
         upath.data[str(message.from_user.id)] = 'help-menu'
         upath.update()
 
+        lang = await Action.get_language(user=message.from_user)
         await message.answer(
-                            text='Вы находитесь в меню, где есть ответы на некоторые вопросы и возможность написать нам в службу поддержки.\n\nВыберите действие:',
-                            reply_markup=await menu.help_menu(),
+                            lang.p9,
+                            reply_markup=await menu.help_menu(user=message.from_user),
                             parse_mode=ParseMode.MARKDOWN
             )
         
     async def get_helper(self,
                        message: Message
                        ):
+        
+        lang = await Action.get_language(user=message.from_user)
         await message.answer(
-                            text='Напишите нам на данный аккаунт [@Helper](https://t.me/)\nМы можем не ответить сразу из-за большого количества запросов, поэтому оставьте свой отзыв или проблему, и мы ответим как можно быстрее!',
-                            reply_markup=await menu.help_menu(),
+                            lang.p10,
+                            reply_markup=await menu.help_menu(user=message.from_user),
                             parse_mode=ParseMode.MARKDOWN
             )
     
@@ -88,7 +92,8 @@ class Answer:
         answrs_data = []
         asker_keys = self.db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")[0][0].split(',')
 
-        send_message = await message.answer(text="Идет обработка данных...",
+        lang = await Action.get_language(user=message.from_user)
+        send_message = await message.answer(lang.p11,
                                             reply_markup=ReplyKeyboardRemove())
         
         if asker_keys:
@@ -102,13 +107,14 @@ class Answer:
                         answrs_data.append(anw)
 
         file_link = self.drive.create_table_file(file_name='data/users/answers.csv', 
-                                                 file_name_drive=str(message.from_user.id), 
-                                                 column_title=['Номер вопроса', 'Ключевое слово/фраза', 'Вопрос', 'Ответ'],
+                                                 file_name_drive=str(message.from_user.id), #Deadp47
+                                                 column_title=[lang.p11_a, lang.p11_b, lang.p11_c, lang.p11_d],
                                                  columns=answrs_data)
         
         await self.bot.delete_message(chat_id=send_message.chat.id, message_id=send_message.message_id)
         await self.bot.send_message(message.chat.id, 
-                                    text=f'[Вот ссылка на таблицу с ответами на ваши опросы.]({file_link})', 
+                                    text = lang.p12.format(file_link=file_link), 
+                                    #text = f'[Вот ссылка на таблицу с ответами на ваши опросы.]({file_link})',
                                     parse_mode=ParseMode.MARKDOWN, 
                                     reply_markup=await menu.get_menu(menu='start', user=message.from_user))
     
@@ -118,8 +124,8 @@ class Answer:
         
         upath.data[str(message.from_user.id)] = 'user-cabinet/question'
         upath.update()
-
-        await message.answer(text="Выберите действие:\n\n*Новый опрос* - Данная кнопка, создаст опрос по ващем настроекам.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню\n\n*Осталные кнопки* - Данные кнопки, ваши опросы, на них написанно названия вашего опроса, которое вы ввьели при создание нового опроса. После нажатия на данные кнопки вы попадете в меню где можете редактировать полнастью выбранный опрос.\n\nВыберите действие или опрос:",
+        lang = await Action.get_language(user=message.from_user)
+        await message.answer(lang.p13,
                              reply_markup=await menu.get_menu_myasks(message.from_user),
                              parse_mode=ParseMode.MARKDOWN)
         
@@ -129,7 +135,8 @@ class Answer:
         upath.data[str(message.from_user.id)] = 'user-cabinet'
         upath.update()
 
-        await message.answer(text="Выберите действие:\n\n*Мой опросы* - Данная кнопка, перешлет вас в меню с ващеми опросами.\n\n*Ответы* - Данная кнопка даст вам ответы каторые другие пользователи дали на все ващи опросы.\n\n*Помощь* - Данная кнопка перенаправит вас в меню с ответами на часто задаваемые вопросы и связью со службой поддержки.\n\n*⬅️* - Данная кнопка обозначает выход с аккаунта.\n\nВыберите действие:",
+        lang = await Action.get_language(user=message.from_user)
+        await message.answer(lang.p15,
                              reply_markup=await menu.get_menu(menu='start', user=message.from_user),
                              parse_mode=ParseMode.MARKDOWN)
         
@@ -141,8 +148,10 @@ class Answer:
         upath.data[str(message.from_user.id)] = f'user-cabinet/question/{new_text}'
         upath.update()
 
-        await message.answer(text="Выберите действие:\n\n*Новый вопрос* - Данная кнопка, создает новый вопрос в данном опросе по ващем настроикам.\n\n*Изменить названия* - Данная кнопка, меняет названия данного опроса.\n\n*🚫Удалить опрос🚫* - Данная кнопка, удаляет данный опрос, все вопросы в нем и все пользовательские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню\n\n*Осталные кнопки* - Данные кнопки, ваши вопросы в данном опросе, на них написанно текст вопроса. После нажатия на них, вы попадете в меню где можете редактировать полнастью выбранный вопрос.\n",
-                             reply_markup=await menu.get_menu_myask(asker_key=new_text),
+        lang = await Action.get_language(user=message.from_user)
+        await message.answer(lang.p16,
+                             
+                             reply_markup=await menu.get_menu_myask(asker_key=new_text, user = message.from_user),
                              parse_mode=ParseMode.MARKDOWN)
         
     async def get_askask(self,
@@ -153,8 +162,10 @@ class Answer:
         upath.data[str(message.from_user.id)] = f'{upath.data[str(message.from_user.id)]}/{new_text}'
         upath.update()
 
-        await message.answer(text="Выберите действие:\n\n*Редактировать текст* - Данная кнопка, позволяет вам изменить текст вопроса.\n\n*Редактировать формат ответов* - Данная кнопка, позволяет вам изменить тип ответа на вопрос.\n\n*Редактировать ответы* - Данная кнопка позваоляет редактировать ответы для вопросов, где вы выбрали тип ответов, кнопки.\n\n*Редактировать последовательность* - Данная кнопка, позволяет вам изменить очередь данного вопроса в опросе.\n\n*🚫Удалить вопрос🚫* - Данная кнопка, удалит данный вопрос из опроса и все пользователские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню.\n",
-                             reply_markup=await menu.get_menu_myaskask(),
+        lang = await Action.get_language(user=message.from_user)
+
+        await message.answer(lang.p17,
+                             reply_markup=await menu.get_menu_myaskask(user=message.from_user),
                              parse_mode=ParseMode.MARKDOWN)
         
     async def edit_askask_text(self,
@@ -164,8 +175,11 @@ class Answer:
         upath.data[str(message.from_user.id)] = upath.data[str(message.from_user.id)] + '/edit-text'
         upath.update()
 
-        await self.bot.send_message(chat_id=message.from_user.id,
-                                    text="Напишите ваш новый текст для вопроса:",
+        lang = await Action.get_language(user=message.from_user)
+        await self.bot.send_message(#lang.p18,
+                                    chat_id=message.from_user.id,
+                                    #text = "Напишите ваш новый текст для вопроса:",
+                                    text = lang.p18,
                                     reply_markup=await menu.get_exit_button())
         
     async def edit_answer_type(self,
@@ -175,12 +189,14 @@ class Answer:
         upath.data[str(message.from_user.id)] = upath.data[str(message.from_user.id)] + '/edit-type'
         upath.update()
 
-        send_message = await message.answer(text="Идет обработка данных...",
+        lang = await Action.get_language(user=message.from_user)
+
+        send_message = await message.answer(lang.p11,
                                             reply_markup=ReplyKeyboardRemove())
         await self.bot.delete_message(chat_id=send_message.chat.id, message_id=send_message.message_id)
 
-        await message.answer(text="Выберите новый тип ответа на вопрос\n\n*Текст* - Данный тип означает что пользователи которые будут отвечать на данный вопрос будут отвечать в виде текстового сообщения.\n\n*Кнопки* - Данный тип означает что пользователи которые будут отвечать на данный вопрос будут отвечать ввиде нажатия кнопок с ответоми под самим вопросом.",
-                             reply_markup=await menu.get_ask_type(),
+        await message.answer(lang.p20,
+                             reply_markup=await menu.get_ask_type(user=message.from_user),
                              parse_mode=ParseMode.MARKDOWN)
     
     async def set_new_answer_type(self,
@@ -193,19 +209,27 @@ class Answer:
         await self.bot.delete_message(chat_id=callback.message.chat.id,
                                       message_id=callback.message.message_id)
         
+        lang = await Action.get_language(user=callback.from_user)
+
         if callback.data.split(':')[1] == 'text':
             upath.data[str(callback.from_user.id)] = '/'.join(split_path[:4])
             upath.update()
 
             ask = self.db.SQL(f"SELECT `ask` FROM `asks` WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
             await self.bot.send_message(chat_id=callback.from_user.id,
-                                        text=f"Вы изменили тип ответа на данный вопрос:\n*\"{ask[0][0]}\"*\n\nТеперь тип ответа на вопроса будет в виде текста",
-                                        reply_markup=await menu.get_menu_myaskask(),
+                                        #text = "Вы изменили тип ответа на данный вопрос:\n*\"{ask[0][0]}\"*\n\nТеперь тип ответа на вопроса будет в виде текста",
+                                        text = lang.p21.format(ask = ask[0][0]),
+                                        reply_markup=await menu.get_menu_myaskask(user=callback.from_user),
                                         parse_mode=ParseMode.MARKDOWN)
-            
+        
+        
+
         else:
-            await self.bot.send_message(chat_id=callback.from_user.id,
-                                        text="Напишите ваши варианты ответов, разделенные через данный знак хэштега, как в скобках (#), они будут отабражанны в виде кнопок под ващем вопросом:",
+            lang = await Action.get_language(user=callback.from_user)
+            await self.bot.send_message(#lang.p22,
+                                        chat_id=callback.from_user.id,
+                                        #text = "Напишите ваши варианты ответов, разделенные через данный знак хэштега, как в скобках (#), они будут отабражанны в виде кнопок под ващем вопросом:",
+                                        text = lang.p22,
                                         reply_markup=await menu.get_exit_button(),
                                         parse_mode=ParseMode.MARKDOWN)
 
@@ -222,9 +246,14 @@ class Answer:
         await self.bot.delete_message(chat_id=callback.message.chat.id,
                                       message_id=callback.message.message_id)
 
-        await self.bot.send_message(chat_id=callback.from_user.id,
-                                    text="Выберите действие:\n\n*Редактировать текст* - Данная кнопка, позволяет вам изменить текст вопроса.\n\n*Редактировать формат ответов* - Данная кнопка, позволяет вам изменить тип ответа на вопрос.\n\n*Редактировать ответы* - Данная кнопка позваоляет редактировать ответы для вопросов, где вы выбрали тип ответов, кнопки.\n\n*Редактировать последовательность* - Данная кнопка, позволяет вам изменить очередь данного вопроса в опросе.\n\n*🚫Удалить вопрос🚫* - Данная кнопка, удалит данный вопрос из опроса и все пользователские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню.\n",
-                                    reply_markup=await menu.get_menu_myaskask(),
+
+        lang = await Action.get_language(user=callback.from_user)
+
+        await self.bot.send_message(#lang.p17,
+                                    chat_id=callback.from_user.id,                                    
+                                    #text = "Выберите действие:\n\n*Редактировать текст* - Данная кнопка, позволяет вам изменить текст вопроса.\n\n*Редактировать формат ответов* - Данная кнопка, позволяет вам изменить тип ответа на вопрос.\n\n*Редактировать ответы* - Данная кнопка позваоляет редактировать ответы для вопросов, где вы выбрали тип ответов, кнопки.\n\n*Редактировать последовательность* - Данная кнопка, позволяет вам изменить очередь данного вопроса в опросе.\n\n*🚫Удалить вопрос🚫* - Данная кнопка, удалит данный вопрос из опроса и все пользователские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню.\n",
+                                    text = lang.p17,
+                                    reply_markup=await menu.get_menu_myaskask(user=callback.from_user),
                                     parse_mode=ParseMode.MARKDOWN)
 
     async def set_new_answers(self,
@@ -239,8 +268,10 @@ class Answer:
         upath.data[str(message.from_user.id)] = '/'.join(split_path[:4])
         upath.update()
 
-        await message.answer(text=f"Вы изменили тип ответа на данный вопрос:\n*\"{ask[0][0]}\"*\n\nТеперь тип ответа на вопроса будет в виде кнопок",
-                             reply_markup=await menu.get_menu_myaskask(),
+        lang = await Action.get_language(user=message.from_user)
+
+        await message.answer(lang.p24.format(ask = ask[0][0]),
+                             reply_markup=await menu.get_menu_myaskask(user=message.from_user),
                              parse_mode=ParseMode.MARKDOWN)
         
     async def edit_answers(self,
@@ -250,8 +281,11 @@ class Answer:
         upath.data[str(message.from_user.id)] = upath.data[str(message.from_user.id)] + '/edit-answers'
         upath.update()
 
+        lang = await Action.get_language(user=message.from_user)
+
         await self.bot.send_message(chat_id=message.from_user.id,
-                                    text="Напишите ваши варианты ответов, разделенные через данный знак хэштега, как в скобках (#), они будут отабражанны в виде кнопок под ващем вопросом:",
+                                    #text = "Напишите ваши варианты ответов, разделенные через данный знак хэштега, как в скобках (#), они будут отабражанны в виде кнопок под ващем вопросом:",
+                                    text = lang.p22,
                                     reply_markup=await menu.get_exit_button())
         
     async def set_newanswers2(self,
@@ -266,8 +300,12 @@ class Answer:
         upath.data[str(message.from_user.id)] = '/'.join(split_path[:4])
         upath.update()
 
-        await message.answer(text=f"Вы изменили ответы на данный вопрос:\n*\"{ask[0][0]}\"*\n\nТеперь ответы будут такими:\n" + "\n".join([f'{i+1}. *"{answer}"*'for i, answer in enumerate(message.text.split('#'))]),
-                             reply_markup=await menu.get_menu_myaskask(),
+        lang = await Action.get_language(user=message.from_user)
+
+        await message.answer(
+                            #Deadp47
+                             text=lang.p53.format(ask=ask[0][0]) + "\n".join([f'{i+1}. *"{answer}"*'for i, answer in enumerate(message.text.split('#'))]),
+                             reply_markup=await menu.get_menu_myaskask(user=message.from_user),
                              parse_mode=ParseMode.MARKDOWN)
         
     async def exit_edit_ask(self,
@@ -278,9 +316,13 @@ class Answer:
         upath.data[str(message.from_user.id)] = '/'.join(split_path[:4])
         upath.update()
 
-        await self.bot.send_message(chat_id=message.from_user.id,
-                                    text="Выберите действие:\n\n*Редактировать текст* - Данная кнопка, позволяет вам изменить текст вопроса.\n\n*Редактировать формат ответов* - Данная кнопка, позволяет вам изменить тип ответа на вопрос.\n\n*Редактировать ответы* - Данная кнопка позваоляет редактировать ответы для вопросов, где вы выбрали тип ответов, кнопки.\n\n*Редактировать последовательность* - Данная кнопка, позволяет вам изменить очередь данного вопроса в опросе.\n\n*🚫Удалить вопрос🚫* - Данная кнопка, удалит данный вопрос из опроса и все пользователские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню.\n",
-                                    reply_markup=await menu.get_menu_myaskask(),
+        lang = await Action.get_language(user=message.from_user)
+
+        await self.bot.send_message(#lang.p17,
+                                    chat_id=message.from_user.id,
+                                    #text = "Выберите действие:\n\n*Редактировать текст* - Данная кнопка, позволяет вам изменить текст вопроса.\n\n*Редактировать формат ответов* - Данная кнопка, позволяет вам изменить тип ответа на вопрос.\n\n*Редактировать ответы* - Данная кнопка позваоляет редактировать ответы для вопросов, где вы выбрали тип ответов, кнопки.\n\n*Редактировать последовательность* - Данная кнопка, позволяет вам изменить очередь данного вопроса в опросе.\n\n*🚫Удалить вопрос🚫* - Данная кнопка, удалит данный вопрос из опроса и все пользователские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню.\n",
+                                    text = lang.p17,
+                                    reply_markup=await menu.get_menu_myaskask(user=message.from_user),
                                     parse_mode=ParseMode.MARKDOWN)
         
     async def exit_edit_askask_text(self,
@@ -291,9 +333,13 @@ class Answer:
         upath.data[str(message.from_user.id)] = '/'.join(split_path[:4])
         upath.update()
 
-        await self.bot.send_message(chat_id=message.from_user.id,
-                                    text="Выберите действие:\n\n*Редактировать текст* - Данная кнопка, позволяет вам изменить текст вопроса.\n\n*Редактировать формат ответов* - Данная кнопка, позволяет вам изменить тип ответа на вопрос.\n\n*Редактировать ответы* - Данная кнопка позваоляет редактировать ответы для вопросов, где вы выбрали тип ответов, кнопки.\n\n*Редактировать последовательность* - Данная кнопка, позволяет вам изменить очередь данного вопроса в опросе.\n\n*🚫Удалить вопрос🚫* - Данная кнопка, удалит данный вопрос из опроса и все пользователские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню.\n",
-                                    reply_markup=await menu.get_menu_myaskask(),
+        lang = await Action.get_language(user=message.from_user)
+
+        await self.bot.send_message(#lang.p17,
+                                    chat_id=message.from_user.id,
+                                    #text = "Выберите действие:\n\n*Редактировать текст* - Данная кнопка, позволяет вам изменить текст вопроса.\n\n*Редактировать формат ответов* - Данная кнопка, позволяет вам изменить тип ответа на вопрос.\n\n*Редактировать ответы* - Данная кнопка позваоляет редактировать ответы для вопросов, где вы выбрали тип ответов, кнопки.\n\n*Редактировать последовательность* - Данная кнопка, позволяет вам изменить очередь данного вопроса в опросе.\n\n*🚫Удалить вопрос🚫* - Данная кнопка, удалит данный вопрос из опроса и все пользователские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню.\n",
+                                    text = lang.p17,
+                                    reply_markup=await menu.get_menu_myaskask(user=message.from_user),
                                     parse_mode=ParseMode.MARKDOWN)
     
     async def set_edit_askask_text(self,
@@ -307,9 +353,12 @@ class Answer:
         upath.data[str(message.from_user.id)] = '/'.join(split_path[:3]) + f'/{message.text}'
         upath.update()
 
+        lang = await Action.get_language(user=message.from_user)
+
         await self.bot.send_message(chat_id=message.from_user.id,
-                                    text=f"Вы успешно заменили текст вопроса!\nТеперь он такой:\n*\"{message.text}\"*",
-                                    reply_markup=await menu.get_menu_myaskask(),
+                                    #text = "Вы успешно заменили текст вопроса!\nТеперь он такой:\n*\"{message.text}\"*",
+                                    text = lang.p29.format(message_text = message.text),
+                                    reply_markup=await menu.get_menu_myaskask(user=message.from_user),
                                     parse_mode=ParseMode.MARKDOWN)
         
     async def delete_askask(self,
@@ -329,8 +378,10 @@ class Answer:
         upath.data[str(message.from_user.id)] = '/'.join(split_path[:3])
         upath.update()
 
-        await message.answer(text="Вы успешно удалили вопрос!\nВыберите действие:\n\n*Новый вопрос* - Данная кнопка, создает новый вопрос в данном опросе по ващем настроикам.\n\n*Изменить названия* - Данная кнопка, меняет названия данного опроса.\n\n*🚫Удалить опрос🚫* - Данная кнопка, удаляет данный опрос, все вопросы в нем и все пользовательские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню\n\n*Осталные кнопки* - Данные кнопки, ваши вопросы в данном опросе, на них написанно текст вопроса. После нажатия на них, вы попадете в меню где можете редактировать полнастью выбранный вопрос.",
-                             reply_markup=await menu.get_menu_myask(asker_key=split_path[2]),
+        lang = await Action.get_language(user=message.from_user)
+
+        await message.answer(lang.p30,
+                             reply_markup=await menu.get_menu_myask(user = message.from_user,asker_key=split_path[2]),
                              parse_mode=ParseMode.MARKDOWN)
     
     async def exit_askask(self,
@@ -341,9 +392,12 @@ class Answer:
         upath.data[str(message.from_user.id)] = '/'.join(split_path[:3])
         upath.update()
 
-        await message.answer(text="Вы успешно удалили вопрос!\nВыберите действие:\n\n*Новый вопрос* - Данная кнопка, создает новый вопрос в данном опросе по ващем настроикам.\n\n*Изменить названия* - Данная кнопка, меняет названия данного опроса.\n\n*🚫Удалить опрос🚫* - Данная кнопка, удаляет данный опрос, все вопросы в нем и все пользовательские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню\n\n*Осталные кнопки* - Данные кнопки, ваши вопросы в данном опросе, на них написанно текст вопроса. После нажатия на них, вы попадете в меню где можете редактировать полнастью выбранный вопрос.",
-                             reply_markup=await menu.get_menu_myask(asker_key=split_path[2]),
-                             parse_mode=ParseMode.MARKDOWN)
+        lang = await Action.get_language(user=message.from_user)
+
+        await message.answer(
+                            lang.p30,
+                            reply_markup=await menu.get_menu_myask(user = message.from_user,asker_key=split_path[2]),
+                            parse_mode=ParseMode.MARKDOWN)
         
     async def create_ask(self,
                         message: Message):  
@@ -367,7 +421,8 @@ class Answer:
         #                     parse_mode=ParseMode.MARKDOWN)
         ask = self.db.SQL(f"SELECT `ask` FROM `asks` WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
         if ask and ask[0][0] == '':
-            await message.answer(text="Напишите ваш вопрос:",
+            lang = await Action.get_language(user=message.from_user)
+            await message.answer(lang.p32,
                                 reply_markup=await menu.get_exit_button())
         
     async def set_type_ask(self,
@@ -384,8 +439,11 @@ class Answer:
         if ask_type and ask_type[0][0] == 'note':
             upath.data[str(callback.from_user.id)] = f'user-cabinet/question/{split_path[2]}/create-answer'
             upath.update()
-            await self.bot.send_message(chat_id=callback.from_user.id,
-                                        text="Напишите ваши варианты ответов, разделенные через данный знак хэштега, как в скобках (#), они будут отабражанны в виде кнопок под ващем вопросом:",
+            lang = await Action.get_language(user=callback.from_user)
+            await self.bot.send_message(#lang.p22,
+                                        chat_id=callback.from_user.id,
+                                        #text = "Напишите ваши варианты ответов, разделенные через данный знак хэштега, как в скобках (#), они будут отабражанны в виде кнопок под ващем вопросом:",
+                                        text = lang.p22,
                                         reply_markup=await menu.get_exit_button(),
                                         parse_mode=ParseMode.MARKDOWN)
         
@@ -393,10 +451,13 @@ class Answer:
             upath.data[str(callback.from_user.id)] = f'user-cabinet/question/{split_path[2]}'
             upath.update()
 
+            lang = await Action.get_language(user=callback.from_user)
+
             ask = self.db.SQL(f"SELECT `ask` FROM `asks` WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
             await self.bot.send_message(chat_id=callback.from_user.id,
-                                        text=f"Вы создали вопрос:\n*\"{ask[0][0]}\"*\n\nТип ответа на данный вопрос будет в виде текста",
-                                        reply_markup=await menu.get_menu_myask(asker_key=split_path[2]),
+                                        #text = "Вы создали вопрос:\n*\"{ask[0][0]}\"*\n\nТип ответа на данный вопрос будет в виде текста",
+                                        text = lang.p34.format(ask = ask[0][0]),
+                                        reply_markup=await menu.get_menu_myask(asker_key=split_path[2], user = callback.from_user),
                                         parse_mode=ParseMode.MARKDOWN)
 
         await callback.answer()
@@ -416,9 +477,12 @@ class Answer:
         await self.bot.delete_message(chat_id=callback.message.chat.id,
                                       message_id=callback.message.message_id)
 
-        await self.bot.send_message(chat_id=callback.from_user.id,
-                                    text="Выберите действие:\n\n*Новый вопрос* - Данная кнопка, создает новый вопрос в данном опросе по ващем настроикам.\n\n*Изменить названия* - Данная кнопка, меняет названия данного опроса.\n\n*🚫Удалить опрос🚫* - Данная кнопка, удаляет данный опрос, все вопросы в нем и все пользовательские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню\n\n*Осталные кнопки* - Данные кнопки, ваши вопросы в данном опросе, на них написанно текст вопроса. После нажатия на них, вы попадете в меню где можете редактировать полнастью выбранный вопрос.",
-                                    reply_markup=await menu.get_menu_myask(asker_key=split_path[2]),
+        lang = await Action.get_language(user=callback.from_user)
+        await self.bot.send_message(#lang.p35,
+                                    chat_id=callback.from_user.id,
+                                    #text = "Выберите действие:\n\n*Новый вопрос* - Данная кнопка, создает новый вопрос в данном опросе по ващем настроикам.\n\n*Изменить названия* - Данная кнопка, меняет названия данного опроса.\n\n*🚫Удалить опрос🚫* - Данная кнопка, удаляет данный опрос, все вопросы в нем и все пользовательские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню\n\n*Осталные кнопки* - Данные кнопки, ваши вопросы в данном опросе, на них написанно текст вопроса. После нажатия на них, вы попадете в меню где можете редактировать полнастью выбранный вопрос.",
+                                    text = lang.p35,
+                                    reply_markup=await menu.get_menu_myask(asker_key=split_path[2], user = callback.from_user),
                                     parse_mode=ParseMode.MARKDOWN)
         
         await callback.answer()
@@ -432,12 +496,13 @@ class Answer:
 
         self.db.SQL(f"UPDATE `asks` SET `ask` = '{new_text}' WHERE `asker_key` = '{split_path[2]}' ORDER BY id DESC LIMIT 1")
 
-        send_message = await message.answer(text="Идет обработка данных...",
+        lang = await Action.get_language(user=message.from_user)
+        send_message = await message.answer(lang.p11,
                                             reply_markup=ReplyKeyboardRemove())
         await self.bot.delete_message(chat_id=send_message.chat.id, message_id=send_message.message_id)
 
-        await message.answer(text="Выберите тип ответа на вопрос\n\n*Текст* - Данный тип означает что пользователи которые будут отвечать на данный вопрос будут отвечать в виде текстового сообщения.\n\n*Кнопки* - Данный тип означает что пользователи которые будут отвечать на данный вопрос будут отвечать ввиде нажатия кнопок с ответоми под самим вопросом.",
-                             reply_markup=await menu.get_ask_type(),
+        await message.answer(lang.p36,
+                             reply_markup=await menu.get_ask_type(user=message.from_user),
                              parse_mode=ParseMode.MARKDOWN)
 
         return
@@ -445,8 +510,11 @@ class Answer:
         if ask_type and ask_type[0][0] == 'note':
             upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}/create-answer'
             upath.update()
-            await self.bot.send_message(chat_id=message.from_user.id,
-                                        text="Напишите ваши варианты ответов, разделенные через данный знак в скобках (#), они будут отабражанны в виде кнопок под ващем вопросм:",
+            lang = await Action.get_language(user=message.from_user)
+            await self.bot.send_message(#lang.p37,
+                                        chat_id=message.from_user.id,
+                                        #text = "Выберите действие:\n\n*Новый вопрос* - Данная кнопка, создает новый вопрос в данном опросе по ващем настроикам.\n\n*Изменить названия* - Данная кнопка, меняет названия данного опроса.\n\n*🚫Удалить опрос🚫* - Данная кнопка, удаляет данный опрос, все вопросы в нем и все пользовательские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню\n\n*Осталные кнопки* - Данные кнопки, ваши вопросы в данном опросе, на них написанно текст вопроса. После нажатия на них, вы попадете в меню где можете редактировать полнастью выбранный вопрос.",
+                                        text = lang.p35,
                                         reply_markup=await menu.get_exit_button(),
                                         parse_mode=ParseMode.MARKDOWN)
         
@@ -454,8 +522,9 @@ class Answer:
             upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}'
             upath.update()
 
-            await message.answer(text="Выберите действие:\n\n*Новый вопрос* - Данная кнопка, создает новый вопрос в данном опросе по ващем настроикам.\n\n*Изменить названия* - Данная кнопка, меняет названия данного опроса.\n\n*🚫Удалить опрос🚫* - Данная кнопка, удаляет данный опрос, все вопросы в нем и все пользовательские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню\n\n*Осталные кнопки* - Данные кнопки, ваши вопросы в данном опросе, на них написанно текст вопроса. После нажатия на них, вы попадете в меню где можете редактировать полнастью выбранный вопрос.",
-                                 reply_markup=await menu.get_menu_myask(asker_key=split_path[2]),
+            await message.answer(
+                                 lang.p35,
+                                 reply_markup=await menu.get_menu_myask(user = message.from_user,asker_key=split_path[2]),
                                  parse_mode=ParseMode.MARKDOWN)
         
     async def set_ask_answer(self,
@@ -470,8 +539,9 @@ class Answer:
         upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}'
         upath.update()
 
-        await message.answer(text=f"Вы создали вопрос:\n*\"{ask[0][0]}\"*\n\nТип ответа на данный вопрос будет в виде кнопок",
-                             reply_markup=await menu.get_menu_myask(asker_key=split_path[2]),
+        lang = await Action.get_language(user=message.from_user)
+        await message.answer(lang.p39.format(ask = ask[0][0]),
+                             reply_markup=await menu.get_menu_myask(user = message.from_user,asker_key=split_path[2]),
                              parse_mode=ParseMode.MARKDOWN)
         
 
@@ -487,9 +557,12 @@ class Answer:
         upath.data[str(message.from_user.id)] = f'user-cabinet/question/{split_path[2]}'
         upath.update()
 
-        await self.bot.send_message(chat_id=message.from_user.id,
-                                    text="Выберите действие:\n\n*Новый вопрос* - Данная кнопка, создает новый вопрос в данном опросе по ващем настроикам.\n\n*Изменить названия* - Данная кнопка, меняет названия данного опроса.\n\n*🚫Удалить опрос🚫* - Данная кнопка, удаляет данный опрос, все вопросы в нем и все пользовательские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню\n\n*Осталные кнопки* - Данные кнопки, ваши вопросы в данном опросе, на них написанно текст вопроса. После нажатия на них, вы попадете в меню где можете редактировать полнастью выбранный вопрос.",
-                                    reply_markup=await menu.get_menu_myask(asker_key=split_path[2]),
+        lang = await Action.get_language(user=message.from_user)
+        await self.bot.send_message(#lang.p35,
+                                    chat_id=message.from_user.id,
+                                    #text = "Выберите действие:\n\n*Новый вопрос* - Данная кнопка, создает новый вопрос в данном опросе по ващем настроикам.\n\n*Изменить названия* - Данная кнопка, меняет названия данного опроса.\n\n*🚫Удалить опрос🚫* - Данная кнопка, удаляет данный опрос, все вопросы в нем и все пользовательские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню\n\n*Осталные кнопки* - Данные кнопки, ваши вопросы в данном опросе, на них написанно текст вопроса. После нажатия на них, вы попадете в меню где можете редактировать полнастью выбранный вопрос.",
+                                    text = lang.p35,
+                                    reply_markup=await menu.get_menu_myask(user = message.from_user,asker_key=split_path[2]),
                                     parse_mode=ParseMode.MARKDOWN)
 
 
@@ -498,7 +571,8 @@ class Answer:
         upath.data[str(message.from_user.id)] = 'user-cabinet/question/create'
         upath.update()
 
-        await message.answer(text="Ведите названия, по которым другие будут получать доступ к вашему опросу:",
+        lang = await Action.get_language(user=message.from_user)
+        await message.answer(lang.p41,
                              reply_markup=await menu.get_exit_button())
     
     async def set_asker_name(self, message: Message):
@@ -506,14 +580,15 @@ class Answer:
         #text = ''.join(new_text.split('/'))
         exist_key = self.db.SQL(f"SELECT `id` FROM `users` WHERE `asker_key` LIKE '%{',' + text + ':ru'}%'")
 
+        lang = await Action.get_language(user=message.from_user)
         if exist_key:
-            await message.answer(text="Данное названия уже существует!\nПожалуйста, введите друго имя для вашего опроса:",
+            await message.answer(lang.p42,
                              reply_markup=await menu.get_exit_button())
             
             return
         
         elif ',' in text or '/' in text:
-            await message.answer(text="В название опроса нельзя использовать запятые (,) и косую черту (/).\nПожалуйста, введите друго имя для вашего опроса:",
+            await message.answer(lang.p43,
                              reply_markup=await menu.get_exit_button())
             
             return
@@ -547,15 +622,16 @@ class Answer:
         #text = ''.join(new_text.split('/'))
         exist_key = self.db.SQL(f"SELECT `id` FROM `users` WHERE `asker_key` LIKE '%{',' + text + ':ru'}%'")
 
+        lang = await Action.get_language(user=message.from_user)
         if exist_key:
-            await message.answer(text="Данное названия уже существует!\nПожалуйста, введите друго имя для вашего опроса:",
+            await message.answer(lang.p42,
                              reply_markup=await menu.get_exit_button())
             
             return
         
         elif ',' in text or '/' in text:
-            await message.answer(text="В название опроса нельзя использовать запятые (,) и косую черту (/).\nПожалуйста, введите друго имя для вашего опроса:",
-                             reply_markup=await menu.get_exit_button())
+            await message.answer(lang.p43,
+                                 reply_markup=await menu.get_exit_button())
             
             return
 
@@ -565,8 +641,8 @@ class Answer:
         upath.data[str(message.from_user.id)] = '/'.join(upath.data[str(message.from_user.id)].split('/')[:2]) + f'/{text}'
         upath.update()
 
-        await message.answer(text="Вы успешно изменили названия опроса!\nВыберите действие:\n\n*Новый вопрос* - Данная кнопка, создает новый вопрос в данном опросе по ващем настроикам.\n\n*Изменить названия* - Данная кнопка, меняет названия данного опроса.\n\n*🚫Удалить опрос🚫* - Данная кнопка, удаляет данный опрос, все вопросы в нем и все пользовательские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню\n\n*Осталные кнопки* - Данные кнопки, ваши вопросы в данном опросе, на них написанно текст вопроса. После нажатия на них, вы попадете в меню где можете редактировать полнастью выбранный вопрос.\n",
-                             reply_markup=await menu.get_menu_myask(asker_key=upath.data[str(message.from_user.id)].split('/')[2]),
+        await message.answer(lang.p48,
+                             reply_markup=await menu.get_menu_myask(user = message.from_user, asker_key=upath.data[str(message.from_user.id)].split('/')[2]),
                              parse_mode=ParseMode.MARKDOWN
                              )
         
@@ -577,9 +653,11 @@ class Answer:
         upath.data[str(message.from_user.id)] = '/'.join(upath.data[str(message.from_user.id)].split('/')[:3])
         upath.update()
 
+        lang = await Action.get_language(user=message.from_user)
+
         await message.answer(
-                            text="Выберите действие:\n\n*Новый вопрос* - Данная кнопка, создает новый вопрос в данном опросе по ващем настроикам.\n\n*Изменить названия* - Данная кнопка, меняет названия данного опроса.\n\n*🚫Удалить опрос🚫* - Данная кнопка, удаляет данный опрос, все вопросы в нем и все пользовательские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню\n\n*Осталные кнопки* - Данные кнопки, ваши вопросы в данном опросе, на них написанно текст вопроса. После нажатия на них, вы попадете в меню где можете редактировать полнастью выбранный вопрос.\n",
-                            reply_markup=await menu.get_menu_myask(asker_key=upath.data[str(message.from_user.id)].split('/')[2]),
+                            lang.p16,
+                            reply_markup=await menu.get_menu_myask(user = message.from_user, asker_key=upath.data[str(message.from_user.id)].split('/')[2]),
                             parse_mode=ParseMode.MARKDOWN)
     
 
@@ -589,14 +667,15 @@ class Answer:
         upath.data[str(message.from_user.id)] = upath.data[str(message.from_user.id)] + '/delete-asker-menu'
         upath.update()
 
+        lang = await Action.get_language(user=message.from_user)
         await self.bot.delete_message(chat_id=message.chat.id,
-                                      message_id=(await message.answer(text="Идет обработка данных...",
+                                      message_id=(await message.answer(lang.p11,
                                                                         reply_markup=ReplyKeyboardRemove(),
                                                                         parse_mode=ParseMode.MARKDOWN)
                                                   ).message_id
                                       )
-        await message.answer(text="*Вы уверены что хотите удалить данный опрос?*\nПри подтверждение данного действие удалитса все данные по поводу данного опроса и не будут подлежать возврату, подумайте хорошо!",
-                             reply_markup=await menu.get_confirm_delete_asker(),
+        await message.answer(lang.p19,
+                             reply_markup=await menu.get_confirm_delete_asker(message.from_user),
                              parse_mode=ParseMode.MARKDOWN)
     
     async def delete_asker(self,
@@ -616,11 +695,14 @@ class Answer:
         upath.data[str(callback.from_user.id)] = 'user-cabinet/question'
         upath.update()
 
+        lang = await Action.get_language(user=callback.from_user)
 
         await self.bot.delete_message(chat_id=callback.message.chat.id,
                                       message_id=callback.message.message_id)
-        await self.bot.send_message(chat_id=callback.message.chat.id, 
-                                    text="Вы успешно удалили опрос!\nВыберите действие:\n\n*Новый опрос* - Данная кнопка, создаст опрос по ващем настроекам.\n\n*⬅️* - Данная кнопка, вернет вас в преведущее меню.\n\n*Осталные кнопки* - Данные кнопки, ваши опросы, на них написанно названия вашего опроса, которое вы ввьели при создание нового опроса. После нажатия на данные кнопки вы попадете в меню где можете редактировать полнастью выбранный опрос.\n\nВыберите действие или опрос:",
+        await self.bot.send_message(#lang.p50,
+                                    chat_id=callback.message.chat.id, 
+                                    #text = "Вы успешно удалили опрос!\nВыберите действие:\n\n*Новый опрос* - Данная кнопка, создаст опрос по ващем настроекам.\n\n*⬅️* - Данная кнопка, вернет вас в преведущее меню.\n\n*Осталные кнопки* - Данные кнопки, ваши опросы, на них написанно названия вашего опроса, которое вы ввьели при создание нового опроса. После нажатия на данные кнопки вы попадете в меню где можете редактировать полнастью выбранный опрос.\n\nВыберите действие или опрос:",
+                                    text = lang.p50,
                              reply_markup=await menu.get_menu_myasks(user_data=callback.from_user),
                              parse_mode=ParseMode.MARKDOWN)
         
@@ -631,11 +713,15 @@ class Answer:
         upath.data[str(callback.from_user.id)] = '/'.join(upath.data[str(callback.from_user.id)].split('/')[:3])
         upath.update()
 
+        lang = await Action.get_language(user=callback.from_user)
+
         await self.bot.delete_message(chat_id=callback.message.chat.id,
                                       message_id=callback.message.message_id)
-        await self.bot.send_message(chat_id=callback.message.chat.id, 
-                                    text="Выберите действие:\n\n*Новый вопрос* - Данная кнопка, создает новый вопрос в данном опросе по ващем настроикам.\n\n*Изменить названия* - Данная кнопка, меняет названия данного опроса.\n\n*🚫Удалить опрос🚫* - Данная кнопка, удаляет данный опрос, все вопросы в нем и все пользовательские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню\n\n*Осталные кнопки* - Данные кнопки, ваши вопросы в данном опросе, на них написанно текст вопроса. После нажатия на них, вы попадете в меню где можете редактировать полнастью выбранный вопрос.\n",
-                                    reply_markup=await menu.get_menu_myask(asker_key=upath.data[str(callback.from_user.id)].split('/')[2]),
+        await self.bot.send_message(
+                                    chat_id=callback.message.chat.id, 
+                                    #text = "Выберите действие:\n\n*Новый вопрос* - Данная кнопка, создает новый вопрос в данном опросе по ващем настроикам.\n\n*Изменить названия* - Данная кнопка, меняет названия данного опроса.\n\n*🚫Удалить опрос🚫* - Данная кнопка, удаляет данный опрос, все вопросы в нем и все пользовательские ответы на него.\n\n*⬅️* - Данная кнопка обозначает назат в преведущее меню\n\n*Осталные кнопки* - Данные кнопки, ваши вопросы в данном опросе, на них написанно текст вопроса. После нажатия на них, вы попадете в меню где можете редактировать полнастью выбранный вопрос.\n",
+                                    text = lang.p16,
+                                    reply_markup=await menu.get_menu_myask(asker_key=upath.data[str(callback.from_user.id)].split('/')[2], user = callback.from_user),
                                     parse_mode=ParseMode.MARKDOWN)
         
 
@@ -659,14 +745,18 @@ class Answer:
             'password': ''
         }
         file.update()
+
+        lang = await Action.get_language(user=message.from_user)
         
-        await message.answer(text="Введите имя пользователя:",
+        await message.answer(lang.p52,
                              reply_markup=await menu.get_exit_button())
         
     async def exit_login(self,
                           message: Message
                           ) -> None:
-        await message.answer(text="Вы вышли из меню входа в аккаунт!",
+        
+        lang = await Action.get_language(user=message.from_user)
+        await message.answer(text=lang.p38,
                              reply_markup=await menu.get_menu(menu='start', user=message.from_user))
         
     async def login_name(self,
@@ -682,8 +772,10 @@ class Answer:
                     exist = True 
                     break
             
+            lang = await Action.get_language(user=message.from_user)
+            
             if not exist:
-                await message.answer(text="Этого имени не существует!\nВведите, пожалуйста, существующее имя:",
+                await message.answer(lang.p51,
                                         reply_markup=await menu.get_exit_button())
                 
                 return
@@ -692,7 +784,7 @@ class Answer:
         file.data[str(message.from_user.id)]['username'] = new_text
         file.update()
         
-        await message.answer(text=f"Имя аккаунта: {new_text}\nВведите пароль от аккаунта:",
+        await message.answer(lang.p49.format(new_text = new_text),
                              reply_markup=await menu.get_exit_button())
     
     async def login_password(self,
@@ -713,7 +805,8 @@ class Answer:
 
             self.db.SQL(f"UPDATE `users` SET `connected_id` = '{connected_id}' WHERE `username` = '{file.data[str(message.from_user.id)]['username']}'")
             
-            await message.answer(text="Вы успешно вошли в аккаунт!",
+            lang = await Action.get_language(user=message.from_user)
+            await message.answer(lang.p47,
                                     reply_markup=await menu.get_menu(menu='start', user=message.from_user))
             
             upath.data[str(message.from_user.id)] = 'user-cabinet'
@@ -724,7 +817,7 @@ class Answer:
 
             return
         
-        await message.answer(text=f"Пароль к данному аккаунту {file.data[str(message.from_user.id)]['username']} неверен!\nПожалуйста, попробуйте снова:",
+        await message.answer(lang.p40,
                                     reply_markup=await menu.get_exit_button())
     
     async def signin_start(self,
@@ -742,7 +835,8 @@ class Answer:
         
         self.db.SQL(f"INSERT INTO `users` (`id`, `user_id`, `connected_id`, `username`, `password`, `salt`, `balance`, `premium`, `asker_key`) VALUES (NULL, '{message.from_user.id}', '{message.from_user.id}', '', '', '', '0', '0', '')")
         
-        await message.answer(text="Чтобы создавать опросы и давать их другим, вы должны зарегистрировать аккаунт.\nВведите имя для вашего аккаунта:",
+        lang = await Action.get_language(user=message.from_user)
+        await message.answer(lang.p33,
                              reply_markup=await menu.get_exit_button())
 
     async def exit_signin(self,
@@ -750,7 +844,8 @@ class Answer:
                           ) -> None:
         self.db.SQL(f"DELETE FROM `users` WHERE (`username` = '' OR `password` = '') AND (`user_id` = {message.from_user.id}) ORDER BY id DESC LIMIT 1;")
 
-        await message.answer(text="Вы вышли из меню регистрации!",
+        lang = await Action.get_language(user=message.from_user)
+        await message.answer(lang.p31,
                              reply_markup=await menu.get_menu(menu='start', user=message.from_user))
 
 
@@ -760,14 +855,15 @@ class Answer:
         new_text = message.text.replace("'", "''")
         exit_username = self.db.SQL(f"SELECT `username` FROM `users` WHERE `username` = '{new_text}'")
 
+        lang = await Action.get_language(user=message.from_user)
         if exit_username:
-            await message.answer(text="Данное имя уже занято!\nВыберите, пожалуйста, другое:",
+            await message.answer(lang.p28,
                              reply_markup=await menu.get_exit_button())
 
         else:
             self.db.SQL(f"UPDATE `users` SET `username` = '{new_text}' WHERE `user_id` = '{message.from_user.id}' AND `username` = '' ORDER BY id DESC LIMIT 1")
 
-            await message.answer(text=f"Имя ващего аккаунта: {new_text}\nСоздайте пароль для вашего аккаунта:",
+            await message.answer(lang.p27.format(new_text = new_text),
                              reply_markup=await menu.get_exit_button())
 
     async def signin_create_password(self,
@@ -781,7 +877,8 @@ class Answer:
 
         self.db.SQL(f"UPDATE `users` SET `password` = '{new_text}' WHERE `user_id` = '{message.from_user.id}' AND `password` = '' ORDER BY id DESC LIMIT 1")
         
-        await message.answer(text="Вы успешно зарегистрировались!\n*Если вы потеряйте пороль к аккаунту - свежытесь с службой поддершке, либо из описанния к боту либо через кнопу в главном меню.*\n\nЧтобы узнать об каждой кнопки каторые вы ввидете внизу напишыте ```/start```",
+        lang = await Action.get_language(user=message.from_user)
+        await message.answer(lang.p25,
                              reply_markup=await menu.get_menu(menu='start', user=message.from_user),
                              parse_mode=ParseMode.MARKDOWN)
         
@@ -808,8 +905,10 @@ class Answer:
         upath.data[str(user_data.id)] = ''
         upath.update()
 
+        lang = await Action.get_language(user=message.from_user)
+
         await message.answer(
-                            text='Вы вышли из своего аккаунта!\n*Если вы потеряйте пороль к аккаунту - свежытесь с службой поддершке, либо из описанния к боту либо через кнопу в главном меню.*',
+                            lang.p23,
                             reply_markup=await menu.get_menu(menu='start', user=user_data),
                             parse_mode=ParseMode.MARKDOWN
             )
@@ -836,8 +935,10 @@ class Answer:
         if not keyboard:
             keyboard = await menu.get_exit_button()
 
+        lang = await Action.get_language(user=message.from_user)
+
         if keyboard:
-            send_message = await message.answer(text="Идет обработка данных...",
+            send_message = await message.answer(lang.p11,
                                                 reply_markup=ReplyKeyboardRemove())
             await self.bot.delete_message(chat_id=send_message.chat.id, message_id=send_message.message_id)
 
@@ -905,6 +1006,7 @@ class Answer:
 
         user_answer: tuple
         message = callback.message if cb else callback
+
         user_data = callback.from_user
         lang = await Action.get_language(user=user_data)
 
@@ -929,8 +1031,11 @@ class Answer:
             if not ask_data:
                 
                 if not verify:
-                    await self.bot.send_message(chat_id=user_data.id,
-                                                text="Нажмите на кнопку *Продолжить* если не хотите нечего изменять в ващех ответах, либо выберите номер вопроса на который хотите изменить ответ.",
+                    
+                    await self.bot.send_message(#lang.p14,
+                                                chat_id=user_data.id,
+                                                #text = "Нажмите на кнопку *Продолжить* если не хотите нечего изменять в ващех ответах, либо выберите номер вопроса на который хотите изменить ответ.",
+                                                text = lang.p14,
                                                 reply_markup=await menu.get_confirmed_ask(user=user_data, asker_key=user_answer[1]),
                                                 parse_mode=ParseMode.MARKDOWN)
                 else:
