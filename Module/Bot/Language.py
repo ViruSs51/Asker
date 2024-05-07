@@ -215,5 +215,5 @@ __languages = {
     )
 }
 
-async def get_lang(lang: str='ru') -> LangType.Language:
+async def get_lang(lang: str='ro') -> LangType.Language:
     return __languages.get(lang)
