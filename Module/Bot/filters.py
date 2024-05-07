@@ -523,6 +523,7 @@ class EditAskAskText(Filter):
     async def __call__(self,
                        message: Message
                        ) -> bool:
+        lang = await Action.get_language(user=message.from_user)
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
         if str(message.from_user.id) in upath.data:
             split_path = upath.data[str(message.from_user.id)].split('/')
@@ -530,7 +531,7 @@ class EditAskAskText(Filter):
             db = get_db_connection()
             asker_keys = db.SQL(f"SELECT `asker_key` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
 
-            if message.text == 'Редактировать текст' and asker_keys and len(split_path) == 4 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
+            if message.text == lang.b12 and asker_keys and len(split_path) == 4 and '/'.join(split_path[:2]) == 'user-cabinet/question' and split_path[2] in asker_keys[0][0]:
                 queue_ask = db.SQL(f"SELECT `queue` FROM `asks` WHERE `asker_key` = '{split_path[2]}' AND `ask` = '{split_path[3]}'")
 
                 if queue_ask:
