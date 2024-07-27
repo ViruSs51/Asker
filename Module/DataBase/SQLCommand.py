@@ -27,7 +27,8 @@ class SQLRequest:
                 with connect(host=self.__host,
                              user=self.__user,
                              password=self.__password,
-                             database=self.__database
+                             database=self.__database,
+                             raise_on_warnings=True
                              ) as connector:
                     with connector.cursor() as cursor:
                         cursor.execute("SET NAMES 'utf8'")

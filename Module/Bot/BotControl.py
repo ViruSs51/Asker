@@ -36,10 +36,11 @@ class Answer:
         username = await user.get_name()
 
         connected = False
-        for connect in connected_id:
-            if str(user_data.id) in connect[0].split(','):
-                connected = True
-                break   
+        if connected_id:
+            for connect in connected_id:
+                if str(user_data.id) in connect[0].split(','):
+                    connected = True
+                    break   
         
         if connected:
             upath.data[str(message.from_user.id)] = 'user-cabinet'
