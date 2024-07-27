@@ -600,7 +600,7 @@ class Answer:
         upath.data[str(message.from_user.id)] = f'user-cabinet/question'
         upath.update()
 
-        await message.answer(text="Вы успешно создали новый опрос!\nВыберите действие:\n\n*Новый опрос* - Данная кнопка, создаст опрос по ващем настроекам.\n\n*⬅️* - Данная кнопка, вернет вас в преведущее меню.\n\n*Осталные кнопки* - Данные кнопки, ваши опросы, на них написанно названия вашего опроса, которое вы ввьели при создание нового опроса. После нажатия на данные кнопки вы попадете в меню где можете редактировать полнастью выбранный опрос.\n\nВыберите действие или опрос:",
+        await message.answer(text=lang.p44,
                              reply_markup=await menu.get_menu_myasks(user_data=message.from_user),
                              parse_mode=ParseMode.MARKDOWN
                              )
@@ -609,9 +609,10 @@ class Answer:
                                message: Message):
         upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
         upath.data[str(message.from_user.id)] = upath.data[str(message.from_user.id)] + '/chage-name'
+        lang = await Action.get_language(user=message.from_user)
         upath.update()
 
-        await message.answer(text=f"Напишите новое название для этого опроса *\"{upath.data[str(message.from_user.id)].split('/')[2]}\"*:",
+        await message.answer(text=lang.p45.format(asker_name=upath.data[str(message.from_user.id)].split('/')[2]),
                              reply_markup=await menu.get_exit_button(),
                              parse_mode=ParseMode.MARKDOWN)
         

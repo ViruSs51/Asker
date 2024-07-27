@@ -181,6 +181,22 @@ class UserCreatePassword(Filter):
                     return True
 
         return False
+
+class UserGetSignUp(Filter):
+
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        lang = await Action.get_language(user=message.from_user)
+
+        db = get_db_connection()
+        connected_id = db.SQL(f"SELECT `id` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
+
+        if (not connected_id) and ((not str(message.from_user.id) in upath.data) or (str(message.from_user.id) in upath.data and upath.data[str(message.from_user.id)] == '')) and message.text == lang.b2:
+            return True
+
+        return False
     
 class UserExitSignin(Filter):
 
@@ -234,6 +250,22 @@ class UserLoginPassword(Filter):
         file = fm.OpenJson(file_name='Module/Bot/data/login_procces.json')
         
         if str(message.from_user.id) in file.data and not file.data[str(message.from_user.id)]['password']:
+            return True
+
+        return False
+    
+class UserGetLogIn(Filter):
+
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        upath = fm.OpenJson(file_name='Module/Bot/data/userpath.json')
+        lang = await Action.get_language(user=message.from_user)
+
+        db = get_db_connection()
+        connected_id = db.SQL(f"SELECT `id` FROM `users` WHERE `connected_id` LIKE '%{message.from_user.id}%'")
+
+        if (not connected_id) and ((not str(message.from_user.id) in upath.data) or (str(message.from_user.id) in upath.data and upath.data[str(message.from_user.id)] == '')) and message.text == lang.b1:
             return True
 
         return False
@@ -931,3 +963,14 @@ class GetHelper(Filter):
         
         return False
 
+class GetHelp(Filter):
+
+    async def __call__(self,
+                       message: Message
+                       ) -> bool:
+        lang = await Action.get_language(user=message.from_user)
+
+        if message.text == lang.b8:
+            return True
+
+        return False

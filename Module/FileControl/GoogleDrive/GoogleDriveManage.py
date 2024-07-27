@@ -1,23 +1,27 @@
 from ..FileManage import OpenCSV
-
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 
-
 class Drive:
-
-    def __init__(self
-                 ):
+    def __init__(self):
         gauth = GoogleAuth()
-        gauth.LocalWebserverAuth()
+        gauth.LoadCredentialsFile("token.json")
+        if gauth.credentials is None:
+            gauth.LocalWebserverAuth()
+            gauth.SaveCredentialsFile("token.json")
+        elif gauth.access_token_expired:
+            gauth.Refresh()
+            gauth.SaveCredentialsFile("token.json")
+        else:
+            gauth.Authorize()
         self.__drive = GoogleDrive(gauth)
 
-    def create_table_file(self,
-                    file_name: str,
-                    file_name_drive: str,
-                    column_title: list[str]|tuple[str],
-                    columns: list[list]|list[tuple]|tuple[list]|tuple[tuple]
-                    ) -> str:
+    def create_table_file(self, 
+                          file_name: str, 
+                          file_name_drive: str, 
+                          column_title: list | tuple, 
+                          columns: list | tuple
+                          ) -> str:
         file = OpenCSV(file_name=file_name)
         file.create(column_title=column_title, columns=columns)
 

@@ -19,7 +19,7 @@ class MainBot:
                  ) -> None:
         self.loadData()
         
-        self.drive = None #gd.Drive() #Temporar oprit
+        self.drive = gd.Drive() #Temporar oprit
         self.bot = Bot(self.bot_data.token)
 
     def loadData(self
@@ -55,7 +55,7 @@ class AskerBot(MainBot):
         #Help
         self.dp.message(f.ExitHelp())(self.bot_control.start)
         self.dp.message(f.GetHelper())(self.bot_control.get_helper)
-        self.dp.message(F.text.lower() == 'помощь')(self.bot_control.get_help)
+        self.dp.message(f.GetHelp())(self.bot_control.get_help)
 
         #Callback user asks
         self.dp.callback_query((f.SetAskType()))(self.bot_control.set_type_ask)
@@ -77,13 +77,13 @@ class AskerBot(MainBot):
         self.dp.message(f.UserExitLogin())(self.bot_control.exit_login)
         self.dp.message(f.UserLoginName())(self.bot_control.login_name)
         self.dp.message(f.UserLoginPassword())(self.bot_control.login_password)
-        self.dp.message(F.text.lower() == 'войти в аккаунт')(self.bot_control.login_start)
+        self.dp.message(f.UserGetLogIn())(self.bot_control.login_start)
 
         #signin
         self.dp.message(f.UserExitSignin())(self.bot_control.exit_signin)
         self.dp.message(f.UserCreateName())(self.bot_control.signin_create_name)
         self.dp.message(f.UserCreatePassword())(self.bot_control.signin_create_password)
-        self.dp.message(F.text.lower() == 'получить такой же опрос')(self.bot_control.signin_start)
+        self.dp.message(f.UserGetSignUp())(self.bot_control.signin_start)
 
         #User asks
         self.dp.message(f.ExitEditAskAskText())(self.bot_control.exit_edit_askask_text)
